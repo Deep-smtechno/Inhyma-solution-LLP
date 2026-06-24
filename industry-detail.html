@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Explore industry-specific automation and packaging solutions by INHYMA Solutions LLP. Customized systems for Food, Pharma, Logistics, and Manufacturing.">
+  <title>Industry Solutions — INHYMA Solutions LLP</title>
+  <link rel="icon" type="image/png" href="logo.png">
+  <link rel="stylesheet" href="index.css">
+  <style>
+    /* Industry Detail Page Specific Layout */
+    .industry-layout {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: var(--space-12);
+      align-items: start;
+    }
+
+    /* Sidebar Navigation */
+    .industry-sidebar {
+      position: sticky;
+      top: calc(var(--header-height) + var(--space-6));
+      background: var(--color-white);
+      border: 1px solid var(--color-gray-100);
+      border-radius: var(--radius-lg);
+      padding: var(--space-4);
+      box-shadow: var(--shadow-sm);
+      z-index: 10;
+    }
+
+    .industry-sidebar__title {
+      font-size: var(--fs-md);
+      font-weight: var(--fw-bold);
+      color: var(--color-primary);
+      padding: var(--space-2) var(--space-4) var(--space-4);
+      border-bottom: 1px solid var(--color-gray-100);
+      margin-bottom: var(--space-4);
+      text-transform: uppercase;
+      letter-spacing: var(--ls-wide);
+    }
+
+    .industry-sidebar__nav {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-1);
+    }
+
+    .industry-sidebar__btn {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      padding: var(--space-3) var(--space-4);
+      border-radius: var(--radius-md);
+      font-size: var(--fs-sm);
+      font-weight: var(--fw-medium);
+      color: var(--color-gray-600);
+      text-align: left;
+      transition: all var(--transition-base);
+      width: 100%;
+    }
+
+    .industry-sidebar__btn:hover {
+      background: var(--color-gray-50);
+      color: var(--color-blue);
+      transform: translateX(4px);
+    }
+
+    .industry-sidebar__btn.active {
+      background: var(--color-blue-tint);
+      color: var(--color-blue);
+      font-weight: var(--fw-bold);
+      border-left: 4px solid var(--color-blue);
+      border-top-left-radius: 0;
+      border-bottom-left-radius: 0;
+    }
+
+    .industry-sidebar__icon {
+      font-size: var(--fs-lg);
+    }
+
+    /* Main Content Area */
+    .industry-content {
+      transition: opacity var(--transition-base);
+    }
+
+    .industry-content.fade-out {
+      opacity: 0;
+    }
+
+    .industry-header {
+      margin-bottom: var(--space-8);
+    }
+
+    .industry-header__badge {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      padding: 6px 14px;
+      background: var(--color-blue-tint);
+      color: var(--color-blue);
+      border-radius: var(--radius-full);
+      font-size: var(--fs-xs);
+      font-weight: var(--fw-bold);
+      text-transform: uppercase;
+      margin-bottom: var(--space-4);
+    }
+
+    .industry-header__title {
+      font-size: var(--fs-3xl);
+      margin-bottom: var(--space-4);
+    }
+
+    .industry-header__desc {
+      font-size: var(--fs-md);
+      color: var(--color-gray-500);
+      line-height: var(--lh-relaxed);
+      max-width: 800px;
+    }
+
+    /* Challenges vs Solutions */
+    .industry-challenges {
+      margin-bottom: var(--space-12);
+    }
+
+    .challenge-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-6);
+    }
+
+    .challenge-card {
+      background: var(--color-off-white);
+      border-left: 4px solid var(--color-error);
+      padding: var(--space-6);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-xs);
+    }
+
+    .solution-card-box {
+      background: var(--color-white);
+      border-left: 4px solid var(--color-success);
+      padding: var(--space-6);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--color-gray-100);
+    }
+
+    .challenge-card__title, .solution-card-box__title {
+      font-size: var(--fs-base);
+      font-weight: var(--fw-bold);
+      margin-bottom: var(--space-2);
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+
+    .challenge-card__title { color: var(--color-red); }
+    .solution-card-box__title { color: var(--color-success); }
+
+    .challenge-card__text, .solution-card-box__text {
+      font-size: var(--fs-sm);
+      color: var(--color-gray-600);
+      line-height: var(--lh-normal);
+    }
+
+    /* Product Grid List */
+    .industry-products {
+      margin-bottom: var(--space-12);
+    }
+
+    /* Success Stories Card */
+    .industry-case {
+      margin-bottom: var(--space-12);
+      background: linear-gradient(135deg, var(--color-primary-dark), var(--color-primary));
+      color: var(--color-white);
+      border-radius: var(--radius-lg);
+      padding: var(--space-10);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .industry-case__header {
+      margin-bottom: var(--space-6);
+    }
+
+    .industry-case__tag {
+      font-size: var(--fs-xs);
+      font-weight: var(--fw-bold);
+      color: var(--color-accent);
+      text-transform: uppercase;
+      letter-spacing: var(--ls-wider);
+      margin-bottom: var(--space-2);
+      display: block;
+    }
+
+    .industry-case__title {
+      color: var(--color-white);
+      font-size: var(--fs-xl);
+    }
+
+    .industry-case__desc {
+      font-size: var(--fs-sm);
+      color: rgba(255, 255, 255, 0.7);
+      line-height: var(--lh-relaxed);
+      margin-bottom: var(--space-8);
+      max-width: 700px;
+    }
+
+    .industry-case__metrics {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: var(--space-6);
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      padding-top: var(--space-8);
+    }
+
+    .industry-case__metric-val {
+      font-family: var(--font-display);
+      font-size: var(--fs-3xl);
+      font-weight: var(--fw-extrabold);
+      color: var(--color-accent);
+      margin-bottom: var(--space-1);
+    }
+
+    .industry-case__metric-lbl {
+      font-size: var(--fs-xs);
+      color: rgba(255, 255, 255, 0.6);
+      text-transform: uppercase;
+      letter-spacing: var(--ls-wide);
+    }
+
+    /* FAQ accordion */
+    .industry-faq {
+      margin-bottom: var(--space-12);
+    }
+
+    .faq-accordion {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3);
+    }
+
+    .faq-item {
+      border: 1px solid var(--color-gray-100);
+      border-radius: var(--radius-md);
+      background: var(--color-white);
+      overflow: hidden;
+      transition: all var(--transition-base);
+    }
+
+    .faq-item__trigger {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: var(--space-4) var(--space-6);
+      width: 100%;
+      text-align: left;
+      font-weight: var(--fw-semibold);
+      color: var(--color-primary);
+      transition: background var(--transition-fast);
+    }
+
+    .faq-item__trigger:hover {
+      background: var(--color-gray-50);
+    }
+
+    .faq-item__icon {
+      font-size: var(--fs-md);
+      transition: transform var(--transition-base);
+      color: var(--color-gray-400);
+    }
+
+    .faq-item.active .faq-item__icon {
+      transform: rotate(45deg);
+      color: var(--color-blue);
+    }
+
+    .faq-item__content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height var(--transition-smooth);
+      background: var(--color-off-white);
+    }
+
+    .faq-item.active .faq-item__content {
+      max-height: 300px;
+    }
+
+    .faq-item__inner {
+      padding: var(--space-4) var(--space-6) var(--space-6);
+      font-size: var(--fs-sm);
+      color: var(--color-gray-600);
+      line-height: var(--lh-normal);
+      border-top: 1px solid var(--color-gray-100);
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 992px) {
+      .industry-layout {
+        grid-template-columns: 1fr;
+        gap: var(--space-8);
+      }
+
+      .industry-sidebar {
+        position: static;
+        display: block;
+        width: 100%;
+      }
+
+      .industry-sidebar__nav {
+        flex-direction: row;
+        overflow-x: auto;
+        padding-bottom: var(--space-2);
+        scrollbar-width: thin;
+      }
+
+      .industry-sidebar__btn {
+        flex-shrink: 0;
+        white-space: nowrap;
+      }
+
+      .industry-sidebar__btn.active {
+        border-left: none;
+        border-bottom: 3px solid var(--color-blue);
+        border-bottom-left-radius: 0;
+        border-bottom-right-radius: 0;
+      }
+
+      .challenge-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .industry-case__metrics {
+        grid-template-columns: 1fr 1fr;
+        gap: var(--space-4);
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ============================================================
+       HEADER
+       ============================================================ -->
+  <header class="header scrolled" id="header">
+    <div class="header__inner">
+      <a href="index.html" class="header__logo" aria-label="INHYMA Solutions Home">
+        <img src="logo.png" alt="INHYMA Solutions LLP" width="180" height="42">
+      </a>
+      <nav class="header__nav" id="mainNav" aria-label="Main Navigation">
+        <a href="index.html" class="header__nav-link">Home</a>
+        <a href="products.html" class="header__nav-link">Products</a>
+        <a href="industries.html" class="header__nav-link active">Industries</a>
+        <a href="solutions.html" class="header__nav-link">Solutions</a>
+        <a href="blog.html" class="header__nav-link">Resources</a>
+        <a href="about.html" class="header__nav-link">About Us</a>
+        <a href="contact.html" class="header__nav-link">Contact</a>
+      </nav>
+      <div class="header__actions">
+        <a href="https://wa.me/918355896311" class="btn btn--whatsapp btn--sm" target="_blank" rel="noopener">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+          WhatsApp
+        </a>
+        <a href="request-quote.html" class="btn btn--primary btn--sm">
+          Request Quote
+        </a>
+      </div>
+      <button class="header__menu-toggle" id="menuToggle" aria-label="Toggle Menu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ============================================================
+       PAGE BANNER
+       ============================================================ -->
+  <section class="page-banner">
+    <div class="container">
+      <div class="page-banner__content">
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <a href="index.html">Home</a><span class="breadcrumb__sep">/</span>
+          <a href="industries.html">Industries</a><span class="breadcrumb__sep">/</span>
+          <span class="breadcrumb__current" id="breadcrumb-current">Food Processing</span>
+        </nav>
+        <h1 class="page-banner__title" id="banner-title">Food Processing Solutions</h1>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       MAIN LAYOUT SECTION
+       ============================================================ -->
+  <section class="section">
+    <div class="container">
+      <div class="industry-layout">
+        
+        <!-- SIDEBAR TABS -->
+        <aside class="industry-sidebar">
+          <div class="industry-sidebar__title">Our Verticals</div>
+          <div class="industry-sidebar__nav" id="sidebar-nav">
+            <!-- Dynamically populated via JS -->
+          </div>
+        </aside>
+
+        <!-- MAIN DYNAMIC CONTENT -->
+        <main class="industry-content" id="industry-content-panel">
+          
+          <!-- Header Area -->
+          <div class="industry-header">
+            <span class="industry-header__badge" id="industry-badge">
+              <span id="industry-badge-icon">🍕</span> Food Processing
+            </span>
+            <h2 class="industry-header__title" id="industry-title">Food Processing & Packaging Automation</h2>
+            <p class="industry-header__desc" id="industry-desc">
+              Complete automated production and packaging lines optimized for food processing operations. Meets all sanitary design rules.
+            </p>
+          </div>
+
+          <!-- Key Challenges vs Solutions -->
+          <div class="industry-challenges">
+            <h3 class="section-title" style="text-align:left; font-size:var(--fs-xl); margin-bottom:var(--space-6);">Challenges & Solutions</h3>
+            <div class="challenge-grid" id="challenges-container">
+              <!-- Dynamically populated via JS -->
+            </div>
+          </div>
+
+          <!-- Recommended Products -->
+          <div class="industry-products">
+            <h3 class="section-title" style="text-align:left; font-size:var(--fs-xl); margin-bottom:var(--space-6);">Recommended Machinery</h3>
+            <div class="grid grid--2" id="products-container" style="gap:var(--space-6);">
+              <!-- Dynamically populated via JS -->
+            </div>
+          </div>
+
+          <!-- Success Story Card -->
+          <div class="industry-case" id="case-study-panel">
+            <div class="industry-case__header">
+              <span class="industry-case__tag">Success Story</span>
+              <h3 class="industry-case__title" id="case-title">Automated Snack Packaging Line</h3>
+            </div>
+            <p class="industry-case__desc" id="case-desc">
+              Installed a complete packaging line with multi-head weighers and nitrogen gas flushing for a top brand.
+            </p>
+            <div class="industry-case__metrics" id="case-metrics">
+              <!-- Dynamically populated via JS -->
+            </div>
+          </div>
+
+          <!-- FAQ Accordion -->
+          <div class="industry-faq">
+            <h3 class="section-title" style="text-align:left; font-size:var(--fs-xl); margin-bottom:var(--space-6);">Compliance & FAQs</h3>
+            <div class="faq-accordion" id="faqs-container">
+              <!-- Dynamically populated via JS -->
+            </div>
+          </div>
+
+        </main>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       CTA LEAD GENERATION FORM
+       ============================================================ -->
+  <section class="section section--alt" id="quote-form-section">
+    <div class="container" style="max-width:800px;">
+      <div class="section-header">
+        <span class="section-label">Consultation</span>
+        <h2 class="section-title">Request Industry Consultation</h2>
+        <p class="section-subtitle">Connect with our industry application specialists to design an automated solution tailored for your plant floor specifications.</p>
+      </div>
+      <div class="contact-card" style="padding:var(--space-8); background:var(--color-white); border-radius:var(--radius-lg); border:1px solid var(--color-gray-100); box-shadow:var(--shadow-md);">
+        <form id="contactForm">
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="name" class="form-label">Full Name *</label>
+              <input type="text" id="name" class="form-input" required placeholder="John Doe">
+            </div>
+            <div class="form-group">
+              <label for="company" class="form-label">Company Name</label>
+              <input type="text" id="company" class="form-input" placeholder="Enterprise Ltd">
+            </div>
+            <div class="form-group">
+              <label for="mobile" class="form-label">Mobile Number *</label>
+              <input type="tel" id="mobile" class="form-input" required placeholder="+91 XXXXX XXXXX">
+            </div>
+            <div class="form-group">
+              <label for="email" class="form-label">Email Address *</label>
+              <input type="email" id="email" class="form-input" required placeholder="name@company.com">
+            </div>
+          </div>
+          
+          <div class="form-group" style="margin-top:var(--space-4);">
+            <label for="industry-select" class="form-label">Target Industry</label>
+            <select id="industry-select" class="form-select">
+              <option value="food-processing">Food Processing</option>
+              <option value="pharmaceutical">Pharmaceutical</option>
+              <option value="cosmetics">Cosmetics & Personal Care</option>
+              <option value="fmcg">FMCG</option>
+              <option value="chemical">Chemical & Agrochemical</option>
+              <option value="logistics">Logistics & Supply Chain</option>
+              <option value="warehousing">Warehousing</option>
+              <option value="manufacturing">General Manufacturing</option>
+            </select>
+          </div>
+
+          <div class="form-group" style="margin-top:var(--space-4);">
+            <label for="message" class="form-label">Project Requirements & Timeline</label>
+            <textarea id="message" class="form-textarea" rows="4" placeholder="Briefly describe your production capacity, speed target, pack format, and project timeline."></textarea>
+          </div>
+          
+          <button type="submit" class="btn btn--primary btn--lg w-full" id="submit-inquiry" style="margin-top:var(--space-6);">
+            Request Application Assessment
+          </button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       FOOTER
+       ============================================================ -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer__grid">
+        <div class="footer__brand">
+          <div class="footer__logo"><img src="logo.png" alt="INHYMA Solutions LLP" width="160" height="38"></div>
+          <p>India's leading industrial hyper market providing packaging machinery, material handling equipment, and warehouse automation systems.</p>
+        </div>
+        <div>
+          <h4 class="footer__heading">Quick Links</h4>
+          <nav class="footer__links">
+            <a href="index.html" class="footer__link">Home</a>
+            <a href="products.html" class="footer__link">Products</a>
+            <a href="industries.html" class="footer__link">Industries</a>
+            <a href="solutions.html" class="footer__link">Solutions</a>
+            <a href="about.html" class="footer__link">About Us</a>
+            <a href="contact.html" class="footer__link">Contact</a>
+          </nav>
+        </div>
+        <div>
+          <h4 class="footer__heading">Products</h4>
+          <nav class="footer__links">
+            <a href="products.html" class="footer__link">Packaging Machines</a>
+            <a href="products.html" class="footer__link">Filling Machines</a>
+            <a href="products.html" class="footer__link">Sealing Machines</a>
+            <a href="products.html" class="footer__link">Conveyors</a>
+          </nav>
+        </div>
+        <div>
+          <h4 class="footer__heading">Contact</h4>
+          <div class="footer__contact-item">📍 <span>Office No.42, Lodha Supremus, Thane West - 400064</span></div>
+          <div class="footer__contact-item">📞 <a href="tel:+918355896311" style="color:inherit;">+91 83558 96311</a></div>
+          <div class="footer__contact-item">✉️ <a href="mailto:inhymasolutionsdm@gmail.com" style="color:inherit;">inhymasolutionsdm@gmail.com</a></div>
+        </div>
+      </div>
+      <div class="footer__bottom">
+        <span>&copy; 2025 INHYMA Solutions LLP. All rights reserved.</span>
+        <span>Your Industrial Hyper Market</span>
+      </div>
+    </div>
+  </footer>
+
+  <a href="https://wa.me/918355896311" class="whatsapp-float" target="_blank" rel="noopener" aria-label="Chat on WhatsApp">
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+  </a>
+
+  <!-- ============================================================
+       SCRIPTS & DYNAMIC DATA BINDING
+       ============================================================ -->
+  <script src="main.js"></script>
+  <script>
+    // Industries Master Database
+    const industriesData = {
+      'food-processing': {
+        name: 'Food Processing',
+        icon: '🍕',
+        title: 'Food Processing & Packaging Automation',
+        desc: 'We engineer food-safe machinery designed to maximize shelf-life, prevent contamination, and achieve high-speed throughput. Our equipment fully complies with FDA and FSSAI sanitary standards, featuring washdown-ready stainless steel construction.',
+        challenges: [
+          { q: 'Hygienic standards & safety compliance', a: 'We construct all food-contact surfaces using food-grade Stainless Steel (SS 304/SS 316) with sanitary welding to eliminate dust or bacteria pockets.' },
+          { q: 'Preserving freshness & shelf-life extension', a: 'Our pouch packing and band sealing systems feature built-in Nitrogen Flushing (MAP) and gas-barrier hermetic heat sealing.' },
+          { q: 'Varying pack weights and product textures', a: 'Multi-head weighing scales and servo fillers handle everything from fine powder spices to fragile snacks with exact dosing.' }
+        ],
+        products: [
+          { name: 'Automatic Pouch Packing Machine', category: 'Packaging Machines', specs: '⚡ 60 PPM | 📏 10g–1kg | 🔧 SS 304', icon: '📦' },
+          { name: 'Liquid Filling Machine – 4 Head', category: 'Filling Machines', specs: '⚡ 40 BPM | 📏 50ml–5L | 🎯 ±0.5%', icon: '🧪' },
+          { name: 'Continuous Band Sealer', category: 'Sealing Machines', specs: '⚡ 12m/min | 📏 Up to 400mm | 🔥 Temp control', icon: '⚡' },
+          { name: 'PVC Belt Conveyor', category: 'Conveyors', specs: '⚡ 0.5–3 m/s | 📏 Custom | 🔧 Food-grade', icon: '🔄' }
+        ],
+        caseStudy: {
+          title: 'Automated Snack Packaging Line for Patel Foods',
+          desc: 'Replaced manual packing with VFFS baggers equipped with multi-head weighers and nitrogen gas injection, tripling production capability.',
+          metrics: [
+            { val: '3x', label: 'Throughput' },
+            { val: '40%', label: 'Labor Saved' },
+            { val: '99%', label: 'Uptime' },
+            { val: '18mo', label: 'Full ROI' }
+          ]
+        },
+        faqs: [
+          { q: 'Are all contact parts food-safe?', a: 'Yes, all parts coming in contact with food are constructed of food-grade Stainless Steel 304 or 316 and comply with strict food safety norms.' },
+          { q: 'Do you offer nitrogen injection systems?', a: 'Yes. We offer fully integrated nitrogen flushing manifolds for our band sealers and vertical form-fill-seal machines.' },
+          { q: 'Can your machinery wash down easily?', a: 'Yes, we design washdown-ready mechanical assemblies with IP65-rated enclosures for washdown environments.' }
+        ]
+      },
+      'pharmaceutical': {
+        name: 'Pharmaceutical',
+        icon: '💊',
+        title: 'GMP Pharmaceutical Packaging Systems',
+        desc: 'Precision packaging and liquid filling systems engineered for pharmaceutical and nutraceutical lines. Fully GMP-compliant systems designed for sanitization, precision, and complete audit-trail verification.',
+        challenges: [
+          { q: 'Contamination & dust control during filling', a: 'Enclosed filling spaces with dust extraction manifolds and HEPA-filtered clean air integration prevent airborne contamination.' },
+          { q: 'Extreme filling accuracy requirements', a: 'Micro-dose augers and positive displacement piston pumps ensure dose tolerances of less than ±0.5% for active compounds.' },
+          { q: 'Traceability and product batch sealing', a: 'High-speed inkjet coding and thermal transfer printers print batch, date, and QR codes directly onto blister packets or labels.' }
+        ],
+        products: [
+          { name: 'Liquid Filling Machine – 4 Head', category: 'Filling Machines', specs: '⚡ 40 BPM | 📏 50ml–5L | 🎯 ±0.5%', icon: '🧪' },
+          { name: 'Powder Auger Filling Machine', category: 'Filling Machines', specs: '⚡ 25 BPM | 📏 10g–500g | 🎯 ±1%', icon: '🎯' },
+          { name: 'Induction Cap Sealing Machine', category: 'Sealing Machines', specs: '⚡ 60 BPM | 📏 20–120mm | 🎯 Auto-detect', icon: '⚡' },
+          { name: 'Automatic Sticker Labeling Machine', category: 'Labeling Machines', specs: '⚡ 100 BPM | 📏 Round/Flat | 🎯 ±0.5mm', icon: '🏷️' }
+        ],
+        caseStudy: {
+          title: 'GMP Syrup Filling Line for MedCare Pharma',
+          desc: 'Designed and validated a 4-head sterile liquid filling system with automatic capping, induction sealing, and sticker labeling.',
+          metrics: [
+            { val: '5x', label: 'Speed Increase' },
+            { val: '0', label: 'Contamination' },
+            { val: '99.9%', label: 'Dosing Accuracy' },
+            { val: '12mo', label: 'ROI' }
+          ]
+        },
+        faqs: [
+          { q: 'Are your pharma machines GMP compliant?', a: 'Absolutely. We use SS 316L for all product contact parts, utilize non-toxic seal materials, and structure elements for easy compliance auditing.' },
+          { q: 'Do you provide IQ/OQ validation protocols?', a: 'Yes. We compile complete Installation Qualification (IQ) and Operational Qualification (OQ) templates to assist your validation teams.' },
+          { q: 'Can they integrate with clean room grids?', a: 'Yes, our pharmaceutical systems are designed to operate under laminar flow hoods in Class 100 or Class 10,000 clean rooms.' }
+        ]
+      },
+      'cosmetics': {
+        name: 'Cosmetics',
+        icon: '✨',
+        title: 'Cosmetics & Personal Care Packaging',
+        desc: 'Versatile filling, sealing, and labeling machinery designed for creams, gels, lotions, shampoos, and complex cosmetic packaging. Built to combine high aesthetic standard with precision engineering.',
+        challenges: [
+          { q: 'Filling highly viscous creams & pastes', a: 'Pneumatic piston filling systems with custom hopper heating options handle thick products without clogging or dripping.' },
+          { q: 'Varying bottle sizes and container profiles', a: 'Toolless adjustments and modular guide rails allow line workers to execute quick packaging shape changeovers.' },
+          { q: 'Clean, drip-free nozzle operations', a: 'Pneumatic cut-off nozzles with suck-back features ensure clean bottle necks and prevent product drip wastage.' }
+        ],
+        products: [
+          { name: 'Paste Filling Machine – Pneumatic', category: 'Filling Machines', specs: '⚡ 30 BPM | 📏 100ml–2L | 🔧 Food-grade', icon: '🏺' },
+          { name: 'Liquid Filling Machine – 4 Head', category: 'Filling Machines', specs: '⚡ 40 BPM | 📏 50ml–5L | 🎯 ±0.5%', icon: '🧪' },
+          { name: 'Automatic Sticker Labeling Machine', category: 'Labeling Machines', specs: '⚡ 100 BPM | 📏 Round/Flat | 🎯 ±0.5mm', icon: '🏷️' },
+          { name: 'PVC Belt Conveyor', category: 'Conveyors', specs: '⚡ 0.5–3 m/s | 📏 Custom | 🔧 Variable Speed', icon: '🔄' }
+        ],
+        caseStudy: {
+          title: 'Cream Filling Line Automation for Glow-Up Cosmetics',
+          desc: 'Integrated a pneumatic double-head paste filling setup with conveyor index capping, improving throughput while maintaining high cosmetic packaging aesthetics.',
+          metrics: [
+            { val: '2.5x', label: 'Throughput' },
+            { val: '99.8%', label: 'Fill Accuracy' },
+            { val: '15m', label: 'Changeover Time' },
+            { val: '14mo', label: 'ROI' }
+          ]
+        },
+        faqs: [
+          { q: 'Can the machine handle wide jars and tubes?', a: 'Yes. We supply customized filling nozzles and container positioning guides designed specifically for wide-mouth jars and cosmetic tubes.' },
+          { q: 'How do you clean the hoppers between batches?', a: 'Our paste hoppers feature quick-clamp release levers, allowing operators to dismantle and wash contact parts within 10 minutes.' },
+          { q: 'Do you offer capping systems for unique caps?', a: 'Yes, we provide capping chucks tailored to pump sprays, dropper caps, screw caps, and flip-tops.' }
+        ]
+      },
+      'fmcg': {
+        name: 'FMCG',
+        icon: '🛒',
+        title: 'High-Speed FMCG Packaging Lines',
+        desc: 'Engineered for extreme production volume and multi-format packaging demands. Our high-performance bagging, wraps, and conveyances optimize line efficiency and minimize operational downtime.',
+        challenges: [
+          { q: 'Handling extreme throughput speed demands', a: 'High-speed rotary jaw wrappers and servo-driven film feeds achieve stable operation up to 120-150 cycles per minute.' },
+          { q: 'Package material waste & misalignments', a: 'Optical eye-mark sensors dynamically adjust film cut-offs on the fly to eliminate misprinted or off-center bags.' },
+          { q: 'Frequent production batch changes', a: 'Memory recipe banks on our touch-screen HMIs store up to 50 distinct packaging presets for instant loading.' }
+        ],
+        products: [
+          { name: 'Automatic Pouch Packing Machine', category: 'Packaging Machines', specs: '⚡ 60 PPM | 📏 10g–1kg | 🔧 SS 304', icon: '📦' },
+          { name: 'Horizontal Flow Wrap Machine', category: 'Packaging Machines', specs: '⚡ 120 PPM | 📏 Multi-size | 🎯 Servo-driven', icon: '🍬' },
+          { name: 'Vertical Form Fill Seal Machine', category: 'Packaging Machines', specs: '⚡ 80 PPM | 📏 50g–5kg | 💪 Heavy Duty', icon: '🚀' },
+          { name: 'Continuous Band Sealer', category: 'Sealing Machines', specs: '⚡ 12m/min | 📏 Up to 400mm | 🔥 Temp control', icon: '⚡' }
+        ],
+        caseStudy: {
+          title: 'High-Speed Soap Wrapping Line for Royal Soap Co.',
+          desc: 'Replaced older wrap lines with dual servo flow wrap machinery, accelerating speed while cutting wrap material waste.',
+          metrics: [
+            { val: '300', label: 'Pack / Min' },
+            { val: '95%', label: 'OEE Achieved' },
+            { val: '22%', label: 'Material Saved' },
+            { val: '10mo', label: 'ROI' }
+          ]
+        },
+        faqs: [
+          { q: 'What speeds can your wrapping machines reach?', a: 'Our horizontal flow wrap machines can run up to 150 packs per minute depending on the product dimension and wrapper thickness.' },
+          { q: 'Can these pack different sizes of biscuits or soap?', a: 'Yes, the packaging guide tunnels are highly adjustable, accommodating wide dimensional brackets with quick hand wheels.' },
+          { q: 'Do you offer inline weight checks?', a: 'We can integrate checkweighers and metal detectors into the output conveyances for compliance.' }
+        ]
+      },
+      'chemical': {
+        name: 'Chemical',
+        icon: '⚗️',
+        title: 'Corrosion-Resistant Chemical Filling',
+        desc: 'Specialized chemical, agrochemical, and household cleaning fluid filling lines. Constructed with acid-proof plastics, chemical-grade metals, and safety enclosures to secure volatile materials.',
+        challenges: [
+          { q: 'Filling acidic, alkaline or corrosive liquids', a: 'We construct line contact parts from high-density polymers (PTFE/PVC) or Hastelloy metals to eliminate acid wear.' },
+          { q: 'Hazardous gaseous fumes & splashing', a: 'Closed-cabinet filling stations equipped with overhead exhaust integration capture vapors and contain splashes.' },
+          { q: 'Explosive chemical environments', a: 'We assemble systems with ATEX-certified flameproof motors, sealed wire conduits, and pneumatic controls.' }
+        ],
+        products: [
+          { name: 'Liquid Filling Machine – 4 Head', category: 'Filling Machines', specs: '⚡ 40 BPM | 📏 50ml–5L | 🎯 ±0.5%', icon: '🧪' },
+          { name: 'Induction Cap Sealing Machine', category: 'Sealing Machines', specs: '⚡ 60 BPM | 📏 20–120mm | 🎯 Auto-detect', icon: '⚡' },
+          { name: 'PVC Belt Conveyor', category: 'Conveyors', specs: '⚡ 0.5–3 m/s | 📏 Custom | 🔧 Acid-resistant', icon: '🔄' },
+          { name: 'Automatic Sticker Labeling Machine', category: 'Labeling Machines', specs: '⚡ 100 BPM | 📏 Round/Flat | 🎯 ±0.5mm', icon: '🏷️' }
+        ],
+        caseStudy: {
+          title: 'Acid Cleaner Packaging Line for Apex Chemicals',
+          desc: 'Built an acid-resistant liquid filler with titanium valves, enclosed in a fume-extractor canopy to protect factory operators.',
+          metrics: [
+            { val: '60', label: 'BPM Speed' },
+            { val: '100%', label: 'Corrosion Safe' },
+            { val: '0', label: 'Operator Incidents' },
+            { val: '16mo', label: 'ROI' }
+          ]
+        },
+        faqs: [
+          { q: 'How do you prevent metal parts from rusting?', a: 'For aggressive chemicals, we completely remove metal from the filling path, utilizing PVDF nozzles and bellows-driven plastic valves.' },
+          { q: 'Are the electrical panels isolated?', a: 'Yes, electrical cabinets are positive-pressure purged or located separately from liquid paths to prevent fume exposure.' },
+          { q: 'Do you offer anti-foaming nozzles?', a: 'Yes. Our nozzles feature bottom-up sub-surface filling strokes to prevent foaming of chemical surfactants.' }
+        ]
+      },
+      'logistics': {
+        name: 'Logistics',
+        icon: '🚚',
+        title: 'Material Handling for Logistics Hubs',
+        desc: 'High-efficiency sorting, conveying, and package handling systems. Built to handle heavy workloads, expedite package routing, and eliminate transit bottlenecks in logistics centers.',
+        challenges: [
+          { q: 'High package volume & sorting delays', a: 'Integrated dynamic sorting systems automatically divert packages based on barcode scanning or weight signals.' },
+          { q: 'Product damage during belt transit', a: 'Variable speed controllers and shock-absorbing rollers ensure smooth handoffs between conveyor sections.' },
+          { q: 'Truck loading/unloading bottlenecks', a: 'Hydraulic dock levelers and extendable conveyors bridge warehouses directly to truck cargo boxes.' }
+        ],
+        products: [
+          { name: 'Motorized Roller Conveyor System', category: 'Conveyors', specs: '⚡ Variable Speed | 📏 Custom | 💪 500kg', icon: '🔄' },
+          { name: 'PVC Belt Conveyor', category: 'Conveyors', specs: '⚡ 0.5–3 m/s | 📏 Custom Width | 🔧 Heavy Duty', icon: '🔄' },
+          { name: 'Dock Leveler — Hydraulic', category: 'Warehouse Equipment', specs: '💪 10 Ton | 📏 2x2.5m | 🔧 Anti-skid', icon: '🪜' }
+        ],
+        caseStudy: {
+          title: 'Sorting Center Conveyor Network for FastTrack Logistics',
+          desc: 'Designed and installed a 300-meter automated sorting conveyor system connecting warehouse storage to loading docks.',
+          metrics: [
+            { val: '4x', label: 'Sorting Capacity' },
+            { val: '75%', label: 'Faster Dispatch' },
+            { val: '1.2%', label: 'Error Margin' },
+            { val: '15mo', label: 'ROI' }
+          ]
+        },
+        faqs: [
+          { q: 'What is the maximum weight capacity of the rollers?', a: 'Our heavy-duty motorized roller conveyors handle up to 500kg per linear meter. Specialized configurations support higher loads.' },
+          { q: 'Can the speed be synced with barcode scanners?', a: 'Yes, we integrate our PLC panels with industrial scanners to regulate line speeds based on scanning speed.' },
+          { q: 'Are the conveyers height-adjustable?', a: 'Yes, the supporting steel legs feature telescopic screw arrangements to adjust height and floor inclinations.' }
+        ]
+      },
+      'warehousing': {
+        name: 'Warehousing',
+        icon: '🏪',
+        title: 'Smart Warehouse Storage & Automation',
+        desc: 'Maximize space utilization and warehouse logistics speed. We design heavy-duty pallet racking systems, dock levelers, and material handling transport that turn storage into a strategic asset.',
+        challenges: [
+          { q: 'Inefficient floor space utilization', a: 'Custom-designed heavy-duty pallet racking systems utilize vertical storage heights, quadrupling storage capacity.' },
+          { q: 'Slow inventory picking & transit cycles', a: 'High-speed hydraulic stackers and motorized trucks optimize pallet retrieval times.' },
+          { q: 'Unsafe loading at warehouse docks', a: 'Anti-skid hydraulic dock levelers with safety side skirts prevent forklift tilts and slip hazards during loading.' }
+        ],
+        products: [
+          { name: 'Heavy Duty Pallet Racking System', category: 'Warehouse Equipment', specs: '💪 3000kg/level | 📏 Custom | 🔧 Powder Coated', icon: '🪜' },
+          { name: 'Hydraulic Hand Pallet Truck', category: 'Material Handling', specs: '💪 2.5 Ton | 📏 550x1150mm | 🔧 Cast Steel', icon: '🛒' },
+          { name: 'Dock Leveler — Hydraulic', category: 'Warehouse Equipment', specs: '💪 10 Ton | 📏 2x2.5m | 🔧 Anti-skid', icon: '🪜' }
+        ],
+        caseStudy: {
+          title: 'Warehouse Racking & Dock Setup for Global Logistic Hub',
+          desc: 'Implemented vertical heavy-duty racking layouts and automatic dock levelers, optimizing stock storage density.',
+          metrics: [
+            { val: '50%', label: 'Space Saved' },
+            { val: '4x', label: 'Retrieval Speed' },
+            { val: '100%', label: 'Safety Record' },
+            { val: '14mo', label: 'ROI' }
+          ]
+        },
+        faqs: [
+          { q: 'Do you calculate safe loading tolerances?', a: 'Yes. Our engineering team conducts finite element analysis and supplies certified maximum weight capacity specifications for each racking tier.' },
+          { q: 'What sizes do your dock levelers come in?', a: 'Our standard model is 2m x 2.5m, but we custom-manufacture dock plates to fit your unique concrete pit sizes.' },
+          { q: 'Are the racking systems powder-coated?', a: 'Yes, all upright columns and load beams undergo chemical anti-rust washes and premium scratch-resistant powder baking.' }
+        ]
+      },
+      'manufacturing': {
+        name: 'Manufacturing',
+        icon: '🏭',
+        title: 'Manufacturing & Assembly Automation',
+        desc: 'Advanced material flow and customized automation systems for general manufacturing lines. We connect production stations, eliminate manual material handling, and track OEE metrics.',
+        challenges: [
+          { q: 'Production flow bottlenecks between stations', a: 'Continuous motorized belt and roller conveyor loops connect assembly areas, keeping parts flowing smoothly.' },
+          { q: 'High labor dependency & manual errors', a: 'We integrate simple pick-and-place systems, automatic counters, and parts indexing to automate manual actions.' },
+          { q: 'Inability to track line efficiency', a: 'Smart PLC panels count items and transmit live performance metrics (OEE) directly to manager displays.' }
+        ],
+        products: [
+          { name: 'Motorized Roller Conveyor System', category: 'Conveyors', specs: '⚡ Variable Speed | 📏 Custom | 💪 500kg', icon: '🔄' },
+          { name: 'PVC Belt Conveyor', category: 'Conveyors', specs: '⚡ 0.5–3 m/s | 📏 Custom Width | 🔧 Food-grade', icon: '🔄' },
+          { name: 'Heavy Duty Pallet Racking System', category: 'Warehouse Equipment', specs: '💪 3000kg/level | 📏 Custom | 🔧 Powder Coated', icon: '🪜' }
+        ],
+        caseStudy: {
+          title: 'Auto Parts Assembly Conveyor Setup for AutoMech India',
+          desc: 'Designed a variable-speed parts assembly conveyor network with integrated photoelectric sensors at testing stations.',
+          metrics: [
+            { val: '35%', label: 'Cycle Time Cut' },
+            { val: '100%', label: 'Traceability' },
+            { val: '0', label: 'Defects Missed' },
+            { val: '11mo', label: 'ROI' }
+          ]
+        },
+        faqs: [
+          { q: 'Can you customize conveyor shapes (e.g., 90-degree turns)?', a: 'Yes. We manufacture curved roller conveyors, inclined belt conveyors, and spiral systems to optimize complex floor layouts.' },
+          { q: 'What sensors can be integrated?', a: 'We easily mount optical proximity sensors, lasers, checkweighers, and pneumatic reject gates onto our conveyor channels.' },
+          { q: 'Do your machines include emergency stop buttons?', a: 'Yes. All our active machinery comes equipped with prominent emergency stop buttons and overload circuit breakers.' }
+        ]
+      }
+    };
+
+    // DOM Elements
+    const breadcrumbCurrent = document.getElementById('breadcrumb-current');
+    const bannerTitle = document.getElementById('banner-title');
+    const sidebarNav = document.getElementById('sidebar-nav');
+    const industryBadge = document.getElementById('industry-badge');
+    const industryTitle = document.getElementById('industry-title');
+    const industryDesc = document.getElementById('industry-desc');
+    const challengesContainer = document.getElementById('challenges-container');
+    const productsContainer = document.getElementById('products-container');
+    const caseTitle = document.getElementById('case-title');
+    const caseDesc = document.getElementById('case-desc');
+    const caseMetrics = document.getElementById('case-metrics');
+    const faqsContainer = document.getElementById('faqs-container');
+    const industrySelect = document.getElementById('industry-select');
+    const contentPanel = document.getElementById('industry-content-panel');
+
+    // Populate Sidebar
+    function buildSidebar() {
+      sidebarNav.innerHTML = '';
+      Object.keys(industriesData).forEach(key => {
+        const ind = industriesData[key];
+        const btn = document.createElement('button');
+        btn.className = 'industry-sidebar__btn';
+        btn.dataset.id = key;
+        btn.innerHTML = `
+          <span class="industry-sidebar__icon">${ind.icon}</span>
+          <span>${ind.name}</span>
+        `;
+        btn.addEventListener('click', () => switchIndustry(key));
+        sidebarNav.appendChild(btn);
+      });
+    }
+
+    // Switch active industry with smooth transition
+    function switchIndustry(key) {
+      if (!industriesData[key]) return;
+
+      // Add fade out
+      contentPanel.classList.add('fade-out');
+
+      setTimeout(() => {
+        // Update URL query parameter without reloading
+        const url = new URL(window.location);
+        url.searchParams.set('industry', key);
+        window.history.pushState({}, '', url);
+
+        // Update Active Sidebar button
+        document.querySelectorAll('.industry-sidebar__btn').forEach(btn => {
+          if (btn.dataset.id === key) {
+            btn.classList.add('active');
+          } else {
+            btn.classList.remove('active');
+          }
+        });
+
+        // Update Form Select value to match
+        if (industrySelect) {
+          industrySelect.value = key;
+        }
+
+        // Load content
+        const data = industriesData[key];
+        
+        // Page Title & Breadcrumbs
+        breadcrumbCurrent.textContent = data.name;
+        bannerTitle.textContent = `${data.name} Solutions`;
+        
+        // Header
+        industryBadge.innerHTML = `<span style="margin-right:var(--space-2);">${data.icon}</span> ${data.name}`;
+        industryTitle.textContent = data.title;
+        industryDesc.textContent = data.desc;
+
+        // Challenges & Solutions
+        challengesContainer.innerHTML = '';
+        data.challenges.forEach(item => {
+          challengesContainer.innerHTML += `
+            <div class="challenge-card">
+              <div class="challenge-card__title">⚠️ ${item.q}</div>
+              <p class="challenge-card__text">${item.a}</p>
+            </div>
+            <div class="solution-card-box">
+              <div class="solution-card-box__title">✅ INHYMA Engineering</div>
+              <p class="solution-card-box__text">We configure specialized packaging equipment tailored to resolve these challenges, guaranteeing maximum safety and operational throughput.</p>
+            </div>
+          `;
+        });
+
+        // Recommended Products
+        productsContainer.innerHTML = '';
+        data.products.forEach(p => {
+          productsContainer.innerHTML += `
+            <div class="product-card">
+              <div class="product-card__image" style="height:160px; display:flex; align-items:center; justify-content:center; font-size:3rem; background:var(--color-gray-50);">
+                ${p.icon}
+              </div>
+              <div class="product-card__body" style="padding:var(--space-5);">
+                <span class="product-card__category">${p.category}</span>
+                <h4 class="product-card__title" style="font-size:var(--fs-base); margin-bottom:var(--space-2);">${p.name}</h4>
+                <p style="font-size:var(--fs-xs); color:var(--color-gray-400); margin-bottom:var(--space-4);">${p.specs}</p>
+                <div class="product-card__actions" style="margin-top:var(--space-4);">
+                  <a href="product-detail.html" class="btn btn--primary btn--sm w-full">View Machinery</a>
+                  <a href="request-quote.html" class="btn btn--outline btn--sm">Quote</a>
+                </div>
+              </div>
+            </div>
+          `;
+        });
+
+        // Success Story Case Study
+        caseTitle.textContent = data.caseStudy.title;
+        caseDesc.textContent = data.caseStudy.desc;
+        caseMetrics.innerHTML = '';
+        data.caseStudy.metrics.forEach(m => {
+          caseMetrics.innerHTML += `
+            <div>
+              <div class="industry-case__metric-val">${m.val}</div>
+              <div class="industry-case__metric-lbl">${m.label}</div>
+            </div>
+          `;
+        });
+
+        // FAQs
+        faqsContainer.innerHTML = '';
+        data.faqs.forEach((faq, index) => {
+          const faqItem = document.createElement('div');
+          faqItem.className = 'faq-item';
+          faqItem.innerHTML = `
+            <button class="faq-item__trigger" aria-expanded="false">
+              <span>${faq.q}</span>
+              <span class="faq-item__icon">+</span>
+            </button>
+            <div class="faq-item__content">
+              <div class="faq-item__inner">${faq.a}</div>
+            </div>
+          `;
+          
+          faqItem.querySelector('.faq-item__trigger').addEventListener('click', function() {
+            const isActive = faqItem.classList.contains('active');
+            
+            // Close all FAQs
+            document.querySelectorAll('.faq-item').forEach(el => {
+              el.classList.remove('active');
+              el.querySelector('.faq-item__trigger').setAttribute('aria-expanded', 'false');
+            });
+
+            if (!isActive) {
+              faqItem.classList.add('active');
+              this.setAttribute('aria-expanded', 'true');
+            }
+          });
+          
+          faqsContainer.appendChild(faqItem);
+        });
+
+        // Trigger scroll reveals in main.js if needed
+        if (typeof initScrollReveal === 'function') {
+          initScrollReveal();
+        }
+
+        // Fade in panel
+        contentPanel.classList.remove('fade-out');
+      }, 250);
+    }
+
+    // Initialize Page
+    document.addEventListener('DOMContentLoaded', () => {
+      buildSidebar();
+      
+      // Check query parameter
+      const params = new URLSearchParams(window.location.search);
+      let activeIndustry = params.get('industry');
+      
+      // Default to food-processing if empty or invalid
+      if (!activeIndustry || !industriesData[activeIndustry]) {
+        activeIndustry = 'food-processing';
+      }
+      
+      switchIndustry(activeIndustry);
+
+      // Listen for browser back/forward buttons
+      window.addEventListener('popstate', () => {
+        const currentParams = new URLSearchParams(window.location.search);
+        let currentInd = currentParams.get('industry');
+        if (!currentInd || !industriesData[currentInd]) {
+          currentInd = 'food-processing';
+        }
+        switchIndustry(currentInd);
+      });
+    });
+  </script>
+</body>
+</html>
