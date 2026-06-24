@@ -2461,7 +2461,7 @@ p {
   align-items: center;
   justify-content: space-between;
   gap: var(--space-6);
-  padding: var(--space-4) 0;
+  padding: var(--space-2) 0;
 }
 
 .product-filter__categories {
