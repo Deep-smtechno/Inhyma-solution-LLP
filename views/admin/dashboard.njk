@@ -1,0 +1,37 @@
+{% extends "admin/layout.njk" %}
+{% from "admin/_icons.njk" import icon %}
+{% block content %}
+<div class="tiles">
+  <a class="tile" href="/admin/products"><div class="tile__icon tile__icon--blue">{{ icon('products') }}</div><div><div class="tile__value">{{ counts.Products }}</div><div class="tile__label">Products</div></div></a>
+  <a class="tile" href="/admin/categories"><div class="tile__icon tile__icon--violet">{{ icon('categories') }}</div><div><div class="tile__value">{{ counts.Categories }}</div><div class="tile__label">Categories</div></div></a>
+  <a class="tile" href="/admin/industries"><div class="tile__icon tile__icon--green">{{ icon('industries') }}</div><div><div class="tile__value">{{ counts.Industries }}</div><div class="tile__label">Industries</div></div></a>
+  <a class="tile" href="/admin/solutions"><div class="tile__icon tile__icon--amber">{{ icon('solutions') }}</div><div><div class="tile__value">{{ counts.Solutions }}</div><div class="tile__label">Solutions</div></div></a>
+  <a class="tile" href="/admin/blog"><div class="tile__icon tile__icon--pink">{{ icon('blog') }}</div><div><div class="tile__value">{{ counts.BlogPosts }}</div><div class="tile__label">Blog Posts</div></div></a>
+  <a class="tile" href="/admin/testimonials"><div class="tile__icon" style="background:#ecfeff;color:#0891b2;">{{ icon('testimonials') }}</div><div><div class="tile__value">{{ counts.Testimonials }}</div><div class="tile__label">Testimonials</div></div></a>
+  <a class="tile" href="/admin/leads"><div class="tile__icon tile__icon--accent">{{ icon('leads') }}</div><div><div class="tile__value">{{ counts.NewLeads }} <span style="font-size:14px;color:var(--c-faint);font-weight:600;">/ {{ counts.Leads }}</span></div><div class="tile__label">New Leads</div></div></a>
+</div>
+
+<div class="card">
+  <div class="card__header"><h2>Recent Leads</h2><a class="btn btn-outline btn-sm" href="/admin/leads">View all</a></div>
+  {% if recentLeads.length %}
+  <div class="table-wrap">
+  <table class="data">
+    <thead><tr><th>Name</th><th>Contact</th><th>Source</th><th>Requirement</th><th>Status</th><th>Date</th><th></th></tr></thead>
+    <tbody>
+      {% for l in recentLeads %}
+      <tr>
+        <td><strong>{{ l.Name }}</strong>{% if l.Company %}<br><span class="muted">{{ l.Company }}</span>{% endif %}</td>
+        <td>{{ l.Mobile }}<br><span class="muted">{{ l.Email }}</span></td>
+        <td><span class="pill pill--gray pill--plain">{{ l.Source }}</span></td>
+        <td>{{ l.ProductRequirement or '—' }}</td>
+        <td><span class="pill {{ 'pill--new' if l.Status == 'new' else 'pill--gray' }}">{{ l.Status }}</span></td>
+        <td class="muted">{{ l.CreatedAt | date }}</td>
+        <td><a class="btn btn-outline btn-sm" href="/admin/leads/{{ l.LeadId }}">View</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% else %}<div class="empty">{{ icon('leads') }}<div>No leads yet.</div></div>{% endif %}
+</div>
+{% endblock %}

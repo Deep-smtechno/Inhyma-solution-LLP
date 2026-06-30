@@ -1,0 +1,23 @@
+{% extends "admin/layout.njk" %}
+{% from "admin/_macros.njk" import repeater, imageField, toggle %}
+{% block content %}
+<div class="card">
+  <div class="card__header"><h2>{{ 'Edit' if item else 'New' }} Industry</h2><a class="btn btn-ghost btn-sm" href="/admin/industries">← Back</a></div>
+  <div class="card__body">
+    <form method="post" action="/admin/industries{% if item %}/{{ item.IndustryId }}{% endif %}" enctype="multipart/form-data">
+      <div class="form-grid">
+        <div class="fg"><label>Name *</label><input type="text" name="name" data-slug-source required value="{{ item.Name }}"></div>
+        <div class="fg"><label>Slug</label><input type="text" name="slug" data-slug-target value="{{ item.Slug }}"><div class="hint">Leave blank to auto-generate.</div></div>
+        <div class="fg"><label>Icon Emoji</label><input type="text" name="iconEmoji" value="{{ item.IconEmoji }}" placeholder="🍽️"></div>
+        <div class="fg"><label>Display Order</label><input type="number" name="displayOrder" value="{{ item.DisplayOrder or 0 }}"></div>
+        <div class="fg fg--full"><label>Short Description</label><textarea name="shortDescription">{{ item.ShortDescription }}</textarea></div>
+        <div class="fg fg--full"><label>Full Description (detail page)</label><textarea name="description" rows="6">{{ item.Description }}</textarea><div class="hint">HTML allowed.</div></div>
+        {{ imageField('Industry Image', item.ImagePath if item) }}
+        {{ repeater('tag', 'Tags / Capabilities', tags, 'TagText', 'e.g. Liquid Filling') }}
+        <div class="fg"><label>Status</label>{{ toggle('isActive', 'Active', (not item) or item.IsActive) }}</div>
+      </div>
+      <div class="form-actions"><button class="btn btn-primary" type="submit">Save Industry</button><a class="btn btn-outline" href="/admin/industries">Cancel</a></div>
+    </form>
+  </div>
+</div>
+{% endblock %}

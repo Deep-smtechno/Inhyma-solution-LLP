@@ -1,0 +1,28 @@
+{% extends "layout.njk" %}
+{% from "public/_macros.njk" import banner %}
+
+{% block content %}
+{{ banner('Industries We Serve', 'Delivering specialized packaging and automation solutions tailored to diverse industry verticals.', [{label:'Industries'}]) }}
+
+<section class="section section--alt">
+  <div class="container">
+    <div class="industry-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:var(--space-8);">
+      {% for i in industries %}
+      <a href="/industries/{{ i.Slug }}" class="industry-card reveal" style="height:320px;">
+        <div class="industry-card__bg">
+          <img src="{{ i.ImagePath }}" alt="{{ i.Name }}" loading="lazy">
+        </div>
+        <div class="industry-card__overlay" style="background:linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(27,58,92,0.95) 100%);"></div>
+        <div class="industry-card__content" style="padding:var(--space-8);">
+          <div class="industry-card__icon" style="font-size:2.5rem; margin-bottom:var(--space-4);">{{ i.IconEmoji }}</div>
+          <h3 class="industry-card__title" style="font-size:var(--fs-xl); font-weight:var(--fw-bold); margin-bottom:var(--space-3); color:var(--color-white);">{{ i.Name }}</h3>
+          <p class="industry-card__text" style="font-size:var(--fs-sm); color:rgba(255,255,255,0.85); line-height:var(--lh-normal); margin:0;">
+            {{ i.ShortDescription }}
+          </p>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endblock %}

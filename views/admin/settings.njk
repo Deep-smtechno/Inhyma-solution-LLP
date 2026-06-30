@@ -1,0 +1,28 @@
+{% extends "admin/layout.njk" %}
+{% block content %}
+<form method="post" action="/admin/settings">
+  {% for groupName, rows in groups %}
+  <div class="card" style="margin-bottom:20px;">
+    <div class="card__header"><h2 style="text-transform:capitalize;">{{ groupName }}</h2></div>
+    <div class="card__body">
+      <div class="form-grid">
+        {% for r in rows %}
+        <div class="fg {{ 'fg--full' if r.SettingGroup in ['footer','hero'] or r.SettingKey == 'address' }}">
+          <label>{{ r.Label or r.SettingKey }}</label>
+          {% if r.SettingGroup in ['footer','hero'] %}
+            <textarea name="settings[{{ r.SettingKey }}]" rows="3" maxlength="1000">{{ r.SettingValue }}</textarea>
+          {% elif r.SettingKey == 'address' %}
+            <textarea name="settings[{{ r.SettingKey }}]" rows="3" maxlength="500">{{ r.SettingValue }}</textarea>
+          {% else %}
+            <input type="text" name="settings[{{ r.SettingKey }}]" value="{{ r.SettingValue }}" maxlength="200">
+          {% endif %}
+          <div class="hint">{{ r.SettingKey }}</div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+  <button class="btn btn-primary" type="submit">Save All Settings</button>
+</form>
+{% endblock %}

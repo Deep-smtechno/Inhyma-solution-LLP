@@ -1,0 +1,24 @@
+{% extends "admin/layout.njk" %}
+{% from "admin/_macros.njk" import listTop, delBtn, activePill %}
+{% block content %}
+<div class="card">
+  {{ listTop('All Industries', '/admin/industries/new', 'Add Industry') }}
+  {% if items.length %}
+  <div class="table-wrap"><table class="data">
+    <thead><tr><th>Icon</th><th>Name</th><th>Slug</th><th>Order</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+      {% for i in items %}
+      <tr>
+        <td style="font-size:22px;">{{ i.IconEmoji }}</td>
+        <td><strong>{{ i.Name }}</strong></td>
+        <td class="muted">{{ i.Slug }}</td>
+        <td>{{ i.DisplayOrder }}</td>
+        <td>{{ activePill(i.IsActive) }}</td>
+        <td><div class="row-actions"><a class="btn btn-outline btn-sm" href="/admin/industries/{{ i.IndustryId }}/edit">Edit</a>{{ delBtn('/admin/industries/' + (i.IndustryId|string) + '/delete', 'industry') }}</div></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table></div>
+  {% else %}<div class="empty">No industries yet. <a href="/admin/industries/new">Add one</a>.</div>{% endif %}
+</div>
+{% endblock %}

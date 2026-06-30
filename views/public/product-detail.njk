@@ -1,0 +1,96 @@
+{% extends "layout.njk" %}
+{% from "public/_macros.njk" import banner %}
+
+{% block content %}
+{{ banner(product.Name, null, [{label:'Products', url:'/products'}, {label: product.Name}]) }}
+
+<section class="section">
+  <div class="container">
+    <div class="product-detail" style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-12);align-items:start;">
+
+      <div class="product-detail__gallery">
+        <div class="product-detail__main-image" style="border-radius:var(--radius-lg);overflow:hidden;background:var(--color-gray-50);min-height:360px;display:flex;align-items:center;justify-content:center;">
+          {% if images.length %}
+            <img id="mainImage" src="{{ images[0].FilePath }}" alt="{{ product.Name }}" style="width:100%;height:100%;object-fit:cover;">
+          {% else %}
+            <div class="category-card__image-placeholder" style="height:360px;width:100%;">
+              <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+            </div>
+          {% endif %}
+        </div>
+        {% if images.length > 1 %}
+        <div style="display:flex;gap:var(--space-3);margin-top:var(--space-4);flex-wrap:wrap;">
+          {% for img in images %}
+            <img src="{{ img.FilePath }}" alt="{{ img.AltText or product.Name }}" onclick="document.getElementById('mainImage').src=this.src"
+                 style="width:80px;height:80px;object-fit:cover;border-radius:var(--radius);cursor:pointer;border:1px solid var(--color-gray-100);">
+          {% endfor %}
+        </div>
+        {% endif %}
+      </div>
+
+      <div class="product-detail__info">
+        <span class="product-card__category">{{ product.CategoryLabel or product.CategoryName }}</span>
+        <h2 class="product-detail__title" style="margin:var(--space-2) 0;">{{ product.Name }}</h2>
+        {% if product.ShortDescription %}<p style="color:var(--color-gray-600);">{{ product.ShortDescription }}</p>{% endif %}
+
+        {% if features.length %}
+        <div class="product-card__features" style="margin:var(--space-6) 0;">
+          {% for f in features %}<span class="product-card__feature">{{ f.FeatureText }}</span>{% endfor %}
+        </div>
+        {% endif %}
+
+        {% if specs.length %}
+        <table class="spec-table" style="width:100%;margin:var(--space-6) 0;">
+          <tbody>
+          {% for s in specs %}
+            <tr><th style="text-align:left;padding:var(--space-2);">{{ s.SpecName }}</th><td style="padding:var(--space-2);">{{ s.SpecValue }}</td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+        {% endif %}
+
+        {% if product.Description %}<div style="color:var(--color-gray-600);margin-bottom:var(--space-6);">{{ product.Description | safe }}</div>{% endif %}
+
+        {% if applications.length %}
+        <h4>Applications</h4>
+        <div class="product-card__features" style="margin:var(--space-4) 0;">
+          {% for a in applications %}<span class="product-card__feature">{{ a.AppText }}</span>{% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="btn-group" style="margin-top:var(--space-6);">
+          <a href="/request-quote?product={{ product.Name }}" class="btn btn--primary btn--lg">Request Quote</a>
+          <a href="https://wa.me/{{ settings.whatsapp }}" target="_blank" class="btn btn--outline btn--lg">Chat on WhatsApp</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% if related.length %}
+<section class="section section--alt">
+  <div class="container">
+    <h2 class="section-title">Related Products</h2>
+    <div class="product-grid">
+      {% for p in related %}
+      <div class="product-card reveal">
+        <div class="product-card__image">
+          {% if p.PrimaryImage %}<img src="{{ p.PrimaryImage }}" alt="{{ p.Name }}" style="width:100%;height:100%;object-fit:cover;">
+          {% else %}<div class="category-card__image-placeholder" style="height:100%;"><svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="20" height="20" rx="2"/><path d="M7 12h10"/></svg></div>{% endif %}
+          {% if p.Badge %}<span class="product-card__badge">{{ p.Badge }}</span>{% endif %}
+        </div>
+        <div class="product-card__body">
+          <span class="product-card__category">{{ p.CategoryLabel }}</span>
+          <h3 class="product-card__title">{{ p.Name }}</h3>
+          <div class="product-card__actions">
+            <a href="/products/{{ p.Slug }}" class="btn btn--primary btn--sm w-full">View Details</a>
+            <a href="/request-quote?product={{ p.Name }}" class="btn btn--outline btn--sm">Quote</a>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+{% endblock %}

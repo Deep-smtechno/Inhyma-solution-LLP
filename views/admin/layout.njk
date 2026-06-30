@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+{% from "admin/_icons.njk" import icon %}
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ title }} — INHYMA Admin</title>
+  <link rel="icon" type="image/png" href="/logo.png">
+  <link rel="stylesheet" href="/admin.css?v=1.0.2">
+</head>
+<body class="admin">
+<div class="admin-shell">
+  <div class="scrim" id="scrim" onclick="toggleSidebar()"></div>
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar__brand">
+      <span class="mark">INHYMA<span> Admin</span></span>
+    </div>
+    <nav class="sidebar__nav">
+      <a href="/admin" class="sidebar__link {{ 'active' if activePath == '/admin' }}">{{ icon('dashboard') }} Dashboard</a>
+
+      <div class="sidebar__section">Catalog</div>
+      <a href="/admin/products" class="sidebar__link {{ 'active' if '/admin/products' in activePath }}">{{ icon('products') }} Products</a>
+      <a href="/admin/categories" class="sidebar__link {{ 'active' if '/admin/categories' in activePath }}">{{ icon('categories') }} Categories</a>
+
+      <div class="sidebar__section">Content</div>
+      <a href="/admin/industries" class="sidebar__link {{ 'active' if '/admin/industries' in activePath }}">{{ icon('industries') }} Industries</a>
+      <a href="/admin/solutions" class="sidebar__link {{ 'active' if '/admin/solutions' in activePath }}">{{ icon('solutions') }} Solutions</a>
+      <a href="/admin/blog" class="sidebar__link {{ 'active' if '/admin/blog' in activePath }}">{{ icon('blog') }} Blog</a>
+      <a href="/admin/testimonials" class="sidebar__link {{ 'active' if '/admin/testimonials' in activePath }}">{{ icon('testimonials') }} Testimonials</a>
+
+      <div class="sidebar__section">About Page</div>
+      <a href="/admin/team" class="sidebar__link {{ 'active' if '/admin/team' in activePath }}">{{ icon('team') }} Team</a>
+      <a href="/admin/values" class="sidebar__link {{ 'active' if '/admin/values' in activePath }}">{{ icon('values') }} Core Values</a>
+      <a href="/admin/stats" class="sidebar__link {{ 'active' if '/admin/stats' in activePath }}">{{ icon('stats') }} Stats</a>
+
+      <div class="sidebar__section">CRM</div>
+      <a href="/admin/leads" class="sidebar__link {{ 'active' if '/admin/leads' in activePath }}">{{ icon('leads') }} Leads{% if counts and counts.NewLeads %} <span class="badge">{{ counts.NewLeads }}</span>{% endif %}</a>
+
+      <div class="sidebar__section">System</div>
+      <a href="/admin/settings" class="sidebar__link {{ 'active' if '/admin/settings' in activePath }}">{{ icon('settings') }} Settings</a>
+      <a href="/admin/account" class="sidebar__link {{ 'active' if '/admin/account' in activePath }}">{{ icon('account') }} My Account</a>
+      <a href="/" class="sidebar__link muted-link" target="_blank">{{ icon('site') }} View Site</a>
+    </nav>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <div style="display:flex;align-items:center;gap:14px;">
+        <button class="menu-btn" onclick="toggleSidebar()" aria-label="Menu">{{ icon('menu') }}</button>
+        <div>
+          <div class="topbar__crumb">INHYMA Admin</div>
+          <div class="topbar__title">{{ title }}</div>
+        </div>
+      </div>
+      <div class="topbar__right">
+        <a class="topbar__view" href="/" target="_blank">{{ icon('site') }} View Site</a>
+        <div class="userchip">
+          <div class="avatar">{{ (currentUser.name or currentUser.username)[0] | upper }}</div>
+          <div>
+            <div class="userchip__name">{{ currentUser.name or currentUser.username }}</div>
+            <div class="userchip__role">{{ currentUser.role }}</div>
+          </div>
+        </div>
+        <form method="post" action="/admin/logout"><button class="btn btn-outline btn-sm" type="submit">Logout</button></form>
+      </div>
+    </header>
+
+    <div class="content">
+      {% if flash.success.length %}<div class="flash flash--success">✓ {{ flash.success[0] }}</div>{% endif %}
+      {% if flash.error.length %}<div class="flash flash--error">⚠ {{ flash.error[0] }}</div>{% endif %}
+      {% block content %}{% endblock %}
+    </div>
+  </div>
+</div>
+<script src="/admin.js"></script>
+<script>
+function toggleSidebar(){document.getElementById('sidebar').classList.toggle('open');document.getElementById('scrim').classList.toggle('show');}
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

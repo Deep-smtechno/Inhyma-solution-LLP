@@ -1,0 +1,29 @@
+{% extends "admin/layout.njk" %}
+{% from "admin/_macros.njk" import listTop, delBtn, activePill %}
+{% block content %}
+<div class="card">
+  {{ listTop('Testimonials', '/admin/testimonials/new', 'Add Testimonial') }}
+  {% if items.length %}
+  <div class="table-wrap"><table class="data">
+    <thead><tr><th>Rating</th><th>Author</th><th>Role</th><th>Initials</th><th>Order</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+      {% for t in items %}
+      <tr>
+        <td>
+          <span style="color:#F5A623;font-weight:bold;">
+            {% for i in range(0, t.Rating) %}★{% endfor %}{% for i in range(t.Rating, 5) %}☆{% endfor %}
+          </span>
+        </td>
+        <td><strong>{{ t.AuthorName }}</strong></td>
+        <td>{{ t.AuthorRole or '—' }}</td>
+        <td><span class="pill pill--gray">{{ t.Initials or '—' }}</span></td>
+        <td>{{ t.DisplayOrder }}</td>
+        <td>{{ activePill(t.IsActive) }}</td>
+        <td><div class="row-actions"><a class="btn btn-outline btn-sm" href="/admin/testimonials/{{ t.TestimonialId }}/edit">Edit</a>{{ delBtn('/admin/testimonials/' + (t.TestimonialId|string) + '/delete', 'testimonial') }}</div></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table></div>
+  {% else %}<div class="empty">No testimonials yet. <a href="/admin/testimonials/new">Add one</a>.</div>{% endif %}
+</div>
+{% endblock %}

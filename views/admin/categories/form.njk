@@ -1,0 +1,20 @@
+{% extends "admin/layout.njk" %}
+{% from "admin/_macros.njk" import imageField, toggle %}
+{% block content %}
+<div class="card">
+  <div class="card__header"><h2>{{ 'Edit' if item else 'New' }} Category</h2><a class="btn btn-ghost btn-sm" href="/admin/categories">← Back</a></div>
+  <div class="card__body">
+    <form method="post" action="/admin/categories{% if item %}/{{ item.CategoryId }}{% endif %}" enctype="multipart/form-data">
+      <div class="form-grid">
+        <div class="fg"><label>Name *</label><input type="text" name="name" data-slug-source required value="{{ item.Name }}"></div>
+        <div class="fg"><label>Slug</label><input type="text" name="slug" data-slug-target value="{{ item.Slug }}"><div class="hint">Leave blank to auto-generate.</div></div>
+        <div class="fg fg--full"><label>Description</label><textarea name="description">{{ item.Description }}</textarea></div>
+        {{ imageField('Category Image', item.ImagePath if item) }}
+        <div class="fg"><label>Display Order</label><input type="number" name="displayOrder" value="{{ item.DisplayOrder or 0 }}"></div>
+        <div class="fg"><label>Status</label>{{ toggle('isActive', 'Active (visible on site)', (not item) or item.IsActive) }}</div>
+      </div>
+      <div class="form-actions"><button class="btn btn-primary" type="submit">Save Category</button><a class="btn btn-outline" href="/admin/categories">Cancel</a></div>
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,10 @@
+{% extends "layout.njk" %}
+{% block content %}
+<section class="section" style="min-height:50vh;display:flex;align-items:center;">
+  <div class="container text-center">
+    <h2 class="section-title">Something went wrong</h2>
+    <p style="color:var(--color-gray-500);">{{ message }}</p>
+    <a href="/" class="btn btn--primary btn--lg">Back to Home</a>
+  </div>
+</section>
+{% endblock %}

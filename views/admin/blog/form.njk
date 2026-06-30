@@ -1,0 +1,25 @@
+{% extends "admin/layout.njk" %}
+{% from "admin/_macros.njk" import imageField, toggle %}
+{% block content %}
+<div class="card">
+  <div class="card__header"><h2>{{ 'Edit' if item else 'New' }} Post</h2><a class="btn btn-ghost btn-sm" href="/admin/blog">← Back</a></div>
+  <div class="card__body">
+    <form method="post" action="/admin/blog{% if item %}/{{ item.PostId }}{% endif %}" enctype="multipart/form-data">
+      <div class="form-grid">
+        <div class="fg"><label>Title *</label><input type="text" name="title" data-slug-source required value="{{ item.Title }}"></div>
+        <div class="fg"><label>Slug</label><input type="text" name="slug" data-slug-target value="{{ item.Slug }}"><div class="hint">Leave blank to auto-generate.</div></div>
+        <div class="fg"><label>Tag</label><input type="text" name="tag" value="{{ item.Tag }}" placeholder="e.g. Buying Guide"></div>
+        <div class="fg"><label>Icon Emoji (fallback image)</label><input type="text" name="iconEmoji" value="{{ item.IconEmoji }}" placeholder="📦"></div>
+        <div class="fg"><label>Read Time</label><input type="text" name="readTime" value="{{ item.ReadTime }}" placeholder="5 min read"></div>
+        <div class="fg"><label>Author</label><input type="text" name="author" value="{{ item.Author }}"></div>
+        <div class="fg"><label>Published Date</label><input type="date" name="publishedDate" value="{{ item.PublishedDate | isodate }}"></div>
+        <div class="fg"><label>Status</label>{{ toggle('isPublished', 'Published', (not item) or item.IsPublished) }}</div>
+        <div class="fg fg--full"><label>Excerpt</label><textarea name="excerpt">{{ item.Excerpt }}</textarea></div>
+        <div class="fg fg--full"><label>Body</label><textarea name="body" rows="12">{{ item.Body }}</textarea><div class="hint">HTML allowed.</div></div>
+        {{ imageField('Featured Image', item.ImagePath if item) }}
+      </div>
+      <div class="form-actions"><button class="btn btn-primary" type="submit">Save Post</button><a class="btn btn-outline" href="/admin/blog">Cancel</a></div>
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,34 @@
+{% macro banner(title, subtitle, crumbs=[]) %}
+<section class="page-banner"><div class="container"><div class="page-banner__content">
+  <nav class="breadcrumb">
+    <a href="/">Home</a>
+    {% for c in crumbs %}<span class="breadcrumb__sep">/</span>{% if c.url %}<a href="{{ c.url }}">{{ c.label }}</a>{% else %}<span class="breadcrumb__current">{{ c.label }}</span>{% endif %}{% endfor %}
+  </nav>
+  <h1 class="page-banner__title">{{ title }}</h1>
+  {% if subtitle %}<p class="page-banner__subtitle">{{ subtitle }}</p>{% endif %}
+</div></div></section>
+{% endmacro %}
+
+{% macro productCard(p) %}
+<div class="product-card reveal" data-category="{{ p.CategorySlug }}">
+  <div class="product-card__image">
+    {% if p.PrimaryImage %}
+      <img src="{{ p.PrimaryImage }}" alt="{{ p.Name }}" style="width:100%;height:100%;object-fit:cover;">
+    {% else %}
+      <div class="category-card__image-placeholder" style="height:100%;">
+        <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+      </div>
+    {% endif %}
+    {% if p.Badge %}<span class="product-card__badge">{{ p.Badge }}</span>{% endif %}
+  </div>
+  <div class="product-card__body">
+    <span class="product-card__category">{{ p.CategoryLabel or p.CategoryName }}</span>
+    <h3 class="product-card__title">{{ p.Name }}</h3>
+    {% if p.ShortDescription %}<p class="product-card__excerpt" style="color:var(--color-gray-500);font-size:var(--fs-sm);margin:var(--space-2) 0;">{{ p.ShortDescription | truncate(90) }}</p>{% endif %}
+    <div class="product-card__actions">
+      <a href="/products/{{ p.Slug }}" class="btn btn--primary btn--sm w-full">View Details</a>
+      <a href="/request-quote?product={{ p.Name }}" class="btn btn--outline btn--sm">Quote</a>
+    </div>
+  </div>
+</div>
+{% endmacro %}

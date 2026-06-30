@@ -1,0 +1,18 @@
+{% extends "admin/layout.njk" %}
+{% block content %}
+<div class="card" style="max-width:480px;">
+  <div class="card__header"><h2>Change Password</h2></div>
+  <div class="card__body">
+    <form method="post" action="/admin/account/password">
+      <div class="fg"><label>Current Password</label><input type="password" name="currentPassword" required></div>
+      <div class="fg"><label>New Password</label><input type="password" name="newPassword" required minlength="6"><div class="hint">At least 6 characters.</div></div>
+      <div class="form-actions"><button class="btn btn-primary" type="submit">Update Password</button></div>
+    </form>
+  </div>
+</div>
+<div class="card" style="max-width:480px;margin-top:20px;">
+  <div class="card__body">
+    <p class="muted">Signed in as <strong>{{ currentUser.username }}</strong> ({{ currentUser.role }}).</p>
+  </div>
+</div>
+{% endblock %}

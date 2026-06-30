@@ -1,0 +1,24 @@
+{% extends "admin/layout.njk" %}
+{% from "admin/_macros.njk" import listTop, delBtn, activePill %}
+{% block content %}
+<div class="card">
+  {{ listTop('All Solutions', '/admin/solutions/new', 'Add Solution') }}
+  {% if items.length %}
+  <div class="table-wrap"><table class="data">
+    <thead><tr><th>Image</th><th>Title</th><th>Slug</th><th>Order</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+      {% for s in items %}
+      <tr>
+        <td>{% if s.ImagePath %}<img class="thumb" src="{{ s.ImagePath }}">{% else %}<span class="muted">—</span>{% endif %}</td>
+        <td><strong>{{ s.Title }}</strong></td>
+        <td class="muted">{{ s.Slug }}</td>
+        <td>{{ s.DisplayOrder }}</td>
+        <td>{{ activePill(s.IsActive) }}</td>
+        <td><div class="row-actions"><a class="btn btn-outline btn-sm" href="/admin/solutions/{{ s.SolutionId }}/edit">Edit</a>{{ delBtn('/admin/solutions/' + (s.SolutionId|string) + '/delete', 'solution') }}</div></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table></div>
+  {% else %}<div class="empty">No solutions yet. <a href="/admin/solutions/new">Add one</a>.</div>{% endif %}
+</div>
+{% endblock %}

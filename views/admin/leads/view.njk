@@ -1,0 +1,158 @@
+{% extends "admin/layout.njk" %}
+{% from "admin/_macros.njk" import delBtn %}
+{% from "admin/_icons.njk" import icon %}
+{% block content %}
+
+<div class="page-toolbar" style="justify-content:space-between;">
+  <a class="btn btn-ghost btn-sm" href="/admin/leads">← Back to Leads</a>
+  <span class="muted">Lead #{{ item.LeadId }}</span>
+</div>
+
+{% if item.NextReminderDate %}
+<div class="reminder-banner" style="background: var(--c-amber-bg); border: 1px solid #fbd38d; padding: 12px 18px; border-radius: var(--radius-sm); margin-bottom: 20px; display: flex; align-items: center; gap: 10px; color: #b45309; font-weight: 600; font-size: 14px;">
+  <span style="font-size: 18px;">🗓️</span>
+  <span>Next scheduled call reminder: <strong>{{ item.NextReminderDate | date }}</strong></span>
+</div>
+{% endif %}
+
+<div class="detail-cols">
+
+  <!-- LEFT: lead details -->
+  <div class="card">
+    <div class="card__header">
+      <div class="entity-head">
+        <div class="big-avatar">{{ item.Name[0] | upper }}</div>
+        <div>
+          <div class="entity-head__title">{{ item.Name }}</div>
+          <div class="entity-head__meta">
+            {% if item.Company %}<span class="muted">{{ item.Company }}</span>{% endif %}
+            <span class="pill pill--gray pill--plain">{{ item.Source }}</span>
+            <span class="pill {{ 'pill--new' if item.Status == 'new' else 'pill--gray' }}">{{ item.Status }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card__body">
+      <div class="field-list">
+        <div class="field-row"><div class="k">Mobile</div><div class="v">{% if item.Mobile %}<a href="tel:{{ item.Mobile }}">{{ item.Mobile }}</a>{% else %}<span class="empty-v">Not provided</span>{% endif %}</div></div>
+        <div class="field-row"><div class="k">Email</div><div class="v">{% if item.Email %}<a href="mailto:{{ item.Email }}">{{ item.Email }}</a>{% else %}<span class="empty-v">Not provided</span>{% endif %}</div></div>
+        <div class="field-row"><div class="k">Company</div><div class="v {{ 'empty-v' if not item.Company }}">{{ item.Company or 'Not provided' }}</div></div>
+        <div class="field-row"><div class="k">Industry</div><div class="v {{ 'empty-v' if not item.Industry }}">{{ item.Industry or '—' }}</div></div>
+        <div class="field-row"><div class="k">Product Requirement</div><div class="v {{ 'empty-v' if not item.ProductRequirement }}">{{ item.ProductRequirement or '—' }}</div></div>
+        <div class="field-row"><div class="k">Quantity</div><div class="v {{ 'empty-v' if not item.Quantity }}">{{ item.Quantity or '—' }}</div></div>
+        <div class="field-row"><div class="k">Budget</div><div class="v {{ 'empty-v' if not item.Budget }}">{{ item.Budget or '—' }}</div></div>
+        <div class="field-row"><div class="k">Subject</div><div class="v {{ 'empty-v' if not item.Subject }}">{{ item.Subject or '—' }}</div></div>
+        <div class="field-row"><div class="k">Source</div><div class="v">{{ item.Source }}</div></div>
+        <div class="field-row"><div class="k">Received</div><div class="v">{{ item.CreatedAt | date }}</div></div>
+      </div>
+
+      {% if item.Message %}
+      <div style="margin-top:18px;">
+        <div class="k" style="color:var(--c-muted);font-size:13px;font-weight:600;margin-bottom:8px;">Message</div>
+        <div class="message-block">{{ item.Message }}</div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Call Logs & CRM History Card -->
+  <div class="card" style="margin-top: 20px;">
+    <div class="card__header"><h2>CRM Call Logs & Interaction History</h2></div>
+    <div class="card__body">
+      <!-- Add Call Log Form -->
+      <form method="post" action="/admin/leads/{{ item.LeadId }}/call-logs" style="margin-bottom: 24px; padding-bottom: 24px; border-bottom: 1px solid var(--c-line);">
+        <div class="form-group" style="margin-bottom: 12px;">
+          <label for="notes" style="display:block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--c-muted);">Call Summary / Notes <span style="color:var(--c-red);">*</span></label>
+          <textarea id="notes" name="notes" rows="3" placeholder="Enter summary of discussion, call details, or client requirement changes..." required style="width: 100%; padding: 10px; border: 1px solid var(--c-line); border-radius: var(--radius-sm); font-size: 14px; resize: vertical; font-family: inherit;"></textarea>
+        </div>
+        <div class="form-group" style="margin-bottom: 16px;">
+          <label for="nextReminderDate" style="display:block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--c-muted);">Schedule Next Call Reminder (Optional)</label>
+          <input type="datetime-local" id="nextReminderDate" name="nextReminderDate" style="width: 100%; padding: 10px; border: 1px solid var(--c-line); border-radius: var(--radius-sm); font-size: 14px; font-family: inherit;">
+        </div>
+        <button type="submit" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 6px;">📞 Record Call Log</button>
+      </form>
+
+      <!-- Chronological Call Logs Timeline -->
+      {% if callLogs.length %}
+      <div class="crm-timeline" style="display: flex; flex-direction: column; gap: 16px;">
+        {% for log in callLogs %}
+        <div style="padding: 14px; background: #f8fafc; border-radius: var(--radius-sm); border: 1px solid var(--c-line); position: relative;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 12px;" class="muted">
+            <span style="font-weight: 600; color: var(--c-primary); display: flex; align-items: center; gap: 4px;">📞 Call Logged</span>
+            <span>{{ log.CreatedAt | date }}</span>
+          </div>
+          <div style="font-size: 14px; color: var(--c-ink-2); line-height: 1.5; white-space: pre-wrap;">{{ log.Notes }}</div>
+          {% if log.NextReminderDate %}
+          <div style="margin-top: 10px; font-size: 12px; display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; border-radius: 4px; background: var(--c-amber-bg); color: var(--c-amber); border: 1px solid #fbd38d; font-weight: 600;">
+            <span>🗓️ Follow-up reminder: {{ log.NextReminderDate | date }}</span>
+          </div>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div style="text-align: center; padding: 30px var(--space-4); color: var(--c-muted); font-size: 14px; border: 1px dashed var(--c-line); border-radius: var(--radius-sm); background: #fafafa;">
+        No call log details added yet for this lead.
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- RIGHT: Lead Action Center -->
+  <div>
+    <div class="card">
+      <div class="card__header"><h2>Lead Action Center</h2></div>
+      <div class="card__body">
+        
+        <!-- Quick Actions Section -->
+        <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--c-line);">
+          <label style="display: block; font-size: 11px; font-weight: 600; color: var(--c-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">Quick Actions</label>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+            {% if item.Email %}
+            <a class="btn btn-outline" href="mailto:{{ item.Email }}?subject=Re: Your enquiry to INHYMA Solutions" style="grid-column: span 2; justify-content: center; gap: 6px; padding: 10px; font-size: 13px;">
+              ✉️ Email Reply
+            </a>
+            {% endif %}
+            {% if item.Mobile %}
+            <a class="btn btn-outline" href="https://wa.me/{{ item.Mobile | replace('+','') | replace(' ','') }}" target="_blank" style="justify-content: center; gap: 6px; padding: 10px; font-size: 13px;">
+              💬 WhatsApp
+            </a>
+            {% endif %}
+            {% if item.Mobile %}
+            <a class="btn btn-outline" href="tel:{{ item.Mobile }}" style="justify-content: center; gap: 6px; padding: 10px; font-size: 13px;">
+              📞 Call Lead
+            </a>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Update Status Section -->
+        <form method="post" action="/admin/leads/{{ item.LeadId }}/status" style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--c-line);">
+          <label for="status-select" style="display: block; font-size: 11px; font-weight: 600; color: var(--c-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">Lead Status</label>
+          <div style="display: flex; gap: 8px;">
+            <select id="status-select" name="status" style="flex: 1; padding: 10px; border: 1px solid var(--c-line); border-radius: var(--radius-sm); font-size: 13.5px; background: #fff; color: var(--c-ink-2); font-weight: 600; cursor: pointer; text-transform: uppercase; font-family: inherit;">
+              {% for s in ['new','contacted','quoted','closed','lost'] %}
+              <option value="{{ s }}" {{ 'selected' if item.Status == s }}>
+                {{ s | upper }}
+              </option>
+              {% endfor %}
+            </select>
+            <button class="btn btn-primary" type="submit" style="padding: 10px 16px; font-size: 13px; font-weight: 600;">Save</button>
+          </div>
+        </form>
+
+        <!-- Danger Zone Section -->
+        <div>
+          <label style="display: block; font-size: 11px; font-weight: 600; color: var(--c-red); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">Danger Zone</label>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span class="muted" style="font-size: 13px;">Delete lead permanently</span>
+            {{ delBtn('/admin/leads/' + (item.LeadId|string) + '/delete', 'lead') }}
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

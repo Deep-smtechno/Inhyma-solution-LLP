@@ -1,0 +1,63 @@
+{% extends "layout.njk" %}
+{% from "public/_macros.njk" import banner %}
+
+{% block content %}
+{{ banner('About ' + (settings.company_name or 'INHYMA Solutions'), settings.tagline + ' — providing innovative packaging machinery and automation systems that drive business growth.', [{label:'About Us'}]) }}
+
+<section class="section">
+  <div class="container" style="max-width:820px;text-align:center;">
+    <h2 class="section-title">Building India's Industrial Future</h2>
+    <p style="color:var(--color-gray-600);">{{ settings.footer_about }}</p>
+  </div>
+</section>
+
+{% if values.length %}
+<section class="section section--alt">
+  <div class="container">
+    <div class="section-header text-center"><span class="section-label">What Drives Us</span><h2 class="section-title">Our Core Values</h2></div>
+    <div class="value-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:var(--space-6);margin-top:var(--space-8);">
+      {% for v in values %}
+      <div class="value-card reveal text-center" style="padding:var(--space-6);border:1px solid var(--color-gray-100);border-radius:var(--radius-lg);">
+        <div class="value-card__icon" style="font-size:2.2rem;">{{ v.Icon }}</div>
+        <h4 class="value-card__title">{{ v.Title }}</h4>
+        <p class="value-card__text" style="color:var(--color-gray-500);">{{ v.Body }}</p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+{% if stats.length %}
+<section class="section section--primary">
+  <div class="container">
+    <div class="stats-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:var(--space-8);">
+      {% for s in stats %}
+      <div class="stat-card reveal text-center">
+        <div class="stat-card__value" style="color:var(--color-white);"><span data-count="{{ s.Value }}" class="counter">0</span><span>{{ s.Suffix }}</span></div>
+        <div class="stat-card__label">{{ s.Label }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+{% if team.length %}
+<section class="section">
+  <div class="container">
+    <div class="section-header text-center"><span class="section-label">Our People</span><h2 class="section-title">Leadership Team</h2></div>
+    <div class="team-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:var(--space-6);margin-top:var(--space-8);">
+      {% for m in team %}
+      <div class="team-card reveal text-center">
+        {% if m.ImagePath %}<img src="{{ m.ImagePath }}" alt="{{ m.Name }}" class="team-card__avatar" style="width:96px;height:96px;border-radius:50%;object-fit:cover;margin:0 auto;">
+        {% else %}<div class="team-card__avatar">{{ m.Initials }}</div>{% endif %}
+        <h4 class="team-card__name">{{ m.Name }}</h4>
+        <p class="team-card__role">{{ m.Role }}</p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+{% endblock %}

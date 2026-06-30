@@ -1,0 +1,24 @@
+{% extends "admin/layout.njk" %}
+{% from "admin/_macros.njk" import listTop, delBtn, activePill %}
+{% block content %}
+<div class="card">
+  {{ listTop('Team Members', '/admin/team/new', 'Add Member') }}
+  {% if items.length %}
+  <div class="table-wrap"><table class="data">
+    <thead><tr><th>Avatar</th><th>Name</th><th>Role</th><th>Order</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+      {% for m in items %}
+      <tr>
+        <td>{% if m.ImagePath %}<img class="thumb" src="{{ m.ImagePath }}">{% else %}<span class="pill pill--gray">{{ m.Initials }}</span>{% endif %}</td>
+        <td><strong>{{ m.Name }}</strong></td>
+        <td>{{ m.Role }}</td>
+        <td>{{ m.DisplayOrder }}</td>
+        <td>{{ activePill(m.IsActive) }}</td>
+        <td><div class="row-actions"><a class="btn btn-outline btn-sm" href="/admin/team/{{ m.MemberId }}/edit">Edit</a>{{ delBtn('/admin/team/' + (m.MemberId|string) + '/delete', 'member') }}</div></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table></div>
+  {% else %}<div class="empty">No team members yet. <a href="/admin/team/new">Add one</a>.</div>{% endif %}
+</div>
+{% endblock %}

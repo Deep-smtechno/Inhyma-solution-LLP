@@ -1,0 +1,20 @@
+{% extends "admin/layout.njk" %}
+{% from "admin/_macros.njk" import imageField, toggle %}
+{% block content %}
+<div class="card">
+  <div class="card__header"><h2>{{ 'Edit' if item else 'New' }} Team Member</h2><a class="btn btn-ghost btn-sm" href="/admin/team">← Back</a></div>
+  <div class="card__body">
+    <form method="post" action="/admin/team{% if item %}/{{ item.MemberId }}{% endif %}" enctype="multipart/form-data">
+      <div class="form-grid">
+        <div class="fg"><label>Name *</label><input type="text" name="name" required value="{{ item.Name }}"></div>
+        <div class="fg"><label>Role</label><input type="text" name="role" value="{{ item.Role }}"></div>
+        <div class="fg"><label>Initials (avatar fallback)</label><input type="text" name="initials" value="{{ item.Initials }}" maxlength="4" placeholder="FK"></div>
+        <div class="fg"><label>Display Order</label><input type="number" name="displayOrder" value="{{ item.DisplayOrder or 0 }}"></div>
+        {{ imageField('Photo', item.ImagePath if item) }}
+        <div class="fg"><label>Status</label>{{ toggle('isActive', 'Active', (not item) or item.IsActive) }}</div>
+      </div>
+      <div class="form-actions"><button class="btn btn-primary" type="submit">Save Member</button><a class="btn btn-outline" href="/admin/team">Cancel</a></div>
+    </form>
+  </div>
+</div>
+{% endblock %}

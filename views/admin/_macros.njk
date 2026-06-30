@@ -1,0 +1,78 @@
+{% from "admin/_icons.njk" import icon %}
+
+{% macro listTop(subtitle, newUrl, newLabel) %}
+<div class="card__header">
+  <h2>{{ subtitle }}</h2>
+  {% if newUrl %}<a class="btn btn-primary btn-sm" href="{{ newUrl }}">{{ icon('plus') }} {{ newLabel or 'Add New' }}</a>{% endif %}
+</div>
+{% endmacro %}
+
+{% macro delBtn(action, label) %}
+<form method="post" action="{{ action }}" onsubmit="return confirm('Delete this {{ label or 'item' }}? This cannot be undone.');" style="display:inline;">
+  <button class="btn btn-danger btn-sm" type="submit">Delete</button>
+</form>
+{% endmacro %}
+
+{% macro activePill(isActive) %}
+<span class="pill {{ 'pill--on' if isActive else 'pill--off' }}">{{ 'Active' if isActive else 'Hidden' }}</span>
+{% endmacro %}
+
+{# Toggle switch. `checked` should be truthy/falsy. #}
+{% macro toggle(name, label, checked, value) %}
+<label class="switch">
+  <input type="checkbox" name="{{ name }}" value="{{ value or '1' }}" {{ 'checked' if checked }} style="display: none;">
+  <span class="switch__track"></span>
+  <span class="switch__label">{{ label }}</span>
+</label>
+{% endmacro %}
+
+{# Single-value repeater: renders existing values + an "add row" button. #}
+{% macro repeater(name, label, items, attr, placeholder) %}
+<div class="fg fg--full">
+  <label>{{ label }}</label>
+  <div class="repeater" data-name="{{ name }}">
+    {% for it in items %}
+      <div class="repeater__row">
+        <input type="text" name="{{ name }}" value="{{ it[attr] }}" placeholder="{{ placeholder }}">
+        <button type="button" class="repeater__remove" onclick="this.parentElement.remove()">×</button>
+      </div>
+    {% endfor %}
+    <div class="repeater__row">
+      <input type="text" name="{{ name }}" placeholder="{{ placeholder }}">
+      <button type="button" class="repeater__remove" onclick="this.parentElement.remove()">×</button>
+    </div>
+  </div>
+  <button type="button" class="btn btn-outline btn-sm" onclick="addRepeaterRow(this)">+ Add row</button>
+</div>
+{% endmacro %}
+
+{% macro imageField(label, currentPath, name) %}
+<div class="fg fg--full">
+  <label>{{ label }}</label>
+  {% if currentPath %}<div style="margin-bottom:10px;"><img src="{{ currentPath }}" style="height:90px;border-radius:10px;border:1px solid var(--c-line);"></div>{% endif %}
+  <input type="file" name="{{ name or 'image' }}" accept="image/*">
+  <div class="hint">{% if currentPath %}Upload a new image to replace the current one.{% else %}JPG, PNG or WebP, up to 8 MB.{% endif %}</div>
+</div>
+{% endmacro %}
+
+{% macro pagination(currentPage, totalPages, baseUrl, status) %}
+{% if totalPages > 1 %}
+<div class="pagination" style="display:flex;justify-content:center;align-items:center;gap:10px;margin-top:20px;padding:20px 0;border-top:1px solid var(--color-gray-100);">
+  {% set queryStr = ("&status=" + status) if status else "" %}
+  
+  {% if currentPage > 1 %}
+    <a class="btn btn-outline btn-sm" href="{{ baseUrl }}?page={{ currentPage - 1 }}{{ queryStr }}">Previous</a>
+  {% else %}
+    <button class="btn btn-outline btn-sm" disabled style="opacity:0.5;cursor:not-allowed;">Previous</button>
+  {% endif %}
+
+  <span class="muted" style="font-size:var(--fs-sm);">Page <strong>{{ currentPage }}</strong> of <strong>{{ totalPages }}</strong></span>
+
+  {% if currentPage < totalPages %}
+    <a class="btn btn-outline btn-sm" href="{{ baseUrl }}?page={{ currentPage + 1 }}{{ queryStr }}">Next</a>
+  {% else %}
+    <button class="btn btn-outline btn-sm" disabled style="opacity:0.5;cursor:not-allowed;">Next</button>
+  {% endif %}
+</div>
+{% endif %}
+{% endmacro %}

@@ -1,0 +1,21 @@
+{% extends "admin/layout.njk" %}
+{% from "admin/_macros.njk" import repeater, imageField, toggle %}
+{% block content %}
+<div class="card">
+  <div class="card__header"><h2>{{ 'Edit' if item else 'New' }} Solution</h2><a class="btn btn-ghost btn-sm" href="/admin/solutions">← Back</a></div>
+  <div class="card__body">
+    <form method="post" action="/admin/solutions{% if item %}/{{ item.SolutionId }}{% endif %}" enctype="multipart/form-data">
+      <div class="form-grid">
+        <div class="fg"><label>Title *</label><input type="text" name="title" data-slug-source required value="{{ item.Title }}"></div>
+        <div class="fg"><label>Slug</label><input type="text" name="slug" data-slug-target value="{{ item.Slug }}"><div class="hint">Leave blank to auto-generate.</div></div>
+        <div class="fg fg--full"><label>Description</label><textarea name="description" rows="6">{{ item.Description }}</textarea><div class="hint">HTML allowed.</div></div>
+        {{ imageField('Solution Image', item.ImagePath if item) }}
+        {{ repeater('feature', 'Key Features', features, 'FeatureText', 'e.g. PLC/SCADA integration') }}
+        <div class="fg"><label>Display Order</label><input type="number" name="displayOrder" value="{{ item.DisplayOrder or 0 }}"></div>
+        <div class="fg"><label>Status</label>{{ toggle('isActive', 'Active', (not item) or item.IsActive) }}</div>
+      </div>
+      <div class="form-actions"><button class="btn btn-primary" type="submit">Save Solution</button><a class="btn btn-outline" href="/admin/solutions">Cancel</a></div>
+    </form>
+  </div>
+</div>
+{% endblock %}

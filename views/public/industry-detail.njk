@@ -1,0 +1,47 @@
+{% extends "layout.njk" %}
+{% from "public/_macros.njk" import banner %}
+
+{% block content %}
+{{ banner(industry.Name, industry.ShortDescription, [{label:'Industries', url:'/industries'}, {label: industry.Name}]) }}
+
+<section class="section">
+  <div class="container">
+    <div class="industry-header" style="display:flex;gap:var(--space-6);align-items:center;margin-bottom:var(--space-8);">
+      <div style="font-size:3.5rem;">{{ industry.IconEmoji }}</div>
+      <h2 class="industry-header__title">{{ industry.Name }}</h2>
+    </div>
+
+    {% if industry.ImagePath %}<img src="{{ industry.ImagePath }}" alt="{{ industry.Name }}" style="width:100%;max-height:420px;object-fit:cover;border-radius:var(--radius-lg);margin-bottom:var(--space-8);">{% endif %}
+
+    <div style="color:var(--color-gray-600);max-width:820px;">{{ (industry.Description or industry.ShortDescription) | safe }}</div>
+
+    {% if tags.length %}
+    <div style="margin-top:var(--space-6);display:flex;flex-wrap:wrap;gap:var(--space-2);">
+      {% for t in tags %}<span class="product-card__feature">{{ t.TagText }}</span>{% endfor %}
+    </div>
+    {% endif %}
+  </div>
+</section>
+
+<section class="section section--alt">
+  <div class="container" style="max-width:720px;">
+    <h2 class="section-title">Request Industry Consultation</h2>
+    {% if sent %}<div class="alert alert--success" style="background:var(--color-success,#1ea97c);color:#fff;padding:var(--space-4);border-radius:var(--radius);margin-bottom:var(--space-4);">Thank you! Our team will contact you soon.</div>{% endif %}
+    <div class="contact-card" style="padding:var(--space-8);background:var(--color-white);border-radius:var(--radius-lg);border:1px solid var(--color-gray-100);box-shadow:var(--shadow-md);">
+      <form method="post" action="/industry-inquiry">
+        <input type="hidden" name="industry" value="{{ industry.Name }}">
+        <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-4);">
+          <div class="form-group"><label class="form-label">Full Name *</label><input class="form-input" name="name" required maxlength="160"></div>
+          <div class="form-group"><label class="form-label">Company</label><input class="form-input" name="company" maxlength="200"></div>
+        </div>
+        <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-4);">
+          <div class="form-group"><label class="form-label">Mobile *</label><input class="form-input" name="mobile" required maxlength="40"></div>
+          <div class="form-group"><label class="form-label">Email *</label><input type="email" class="form-input" name="email" required maxlength="160"></div>
+        </div>
+        <div class="form-group"><label class="form-label">Message</label><textarea class="form-textarea" name="message" rows="4" maxlength="2000"></textarea></div>
+        <button class="btn btn--primary btn--lg" type="submit">Submit Request</button>
+      </form>
+    </div>
+  </div>
+</section>
+{% endblock %}

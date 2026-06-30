@@ -1,0 +1,54 @@
+{% extends "layout.njk" %}
+{% from "public/_macros.njk" import banner %}
+
+{% block content %}
+{{ banner('Request a Free Quote', 'Get a customized quotation for your industrial equipment requirements.', [{label:'Request Quote'}]) }}
+
+<section class="section">
+  <div class="container" style="max-width:760px;">
+    <div class="lead-form reveal">
+      <h3 class="lead-form__title">Tell Us Your Requirements</h3>
+      <p class="lead-form__subtitle">Complete the form and we'll prepare a detailed quotation.</p>
+      {% if sent %}<div class="alert" style="background:var(--color-success,#1ea97c);color:#fff;padding:var(--space-4);border-radius:var(--radius);margin-bottom:var(--space-4);">✓ Thank you! Your request has been received.</div>{% endif %}
+      <form method="post" action="/request-quote">
+        <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-4);">
+          <div class="form-group"><label class="form-label">Full Name *</label><input class="form-input" name="name" required maxlength="160"></div>
+          <div class="form-group"><label class="form-label">Company</label><input class="form-input" name="company" maxlength="200"></div>
+        </div>
+        <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-4);">
+          <div class="form-group"><label class="form-label">Mobile *</label><input class="form-input" name="mobile" required maxlength="40"></div>
+          <div class="form-group"><label class="form-label">Email *</label><input type="email" class="form-input" name="email" required maxlength="160"></div>
+        </div>
+        <div class="form-group"><label class="form-label">Industry</label>
+          <select class="form-select" name="industry">
+            <option value="">Select your industry</option>
+            {% for i in navIndustries %}<option>{{ i.Name }}</option>{% endfor %}
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Product Requirement *</label>
+          {% if product %}<input type="hidden" name="product_prefill" value="{{ product }}">{% endif %}
+          <select class="form-select" name="product" required>
+            <option value="">Select product category</option>
+            {% if product %}<option value="{{ product }}" selected>{{ product }}</option>{% endif %}
+            {% for c in categories %}<option>{{ c.Name }}</option>{% endfor %}
+            <option>Custom Solution</option>
+          </select>
+        </div>
+        <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-4);">
+          <div class="form-group"><label class="form-label">Quantity</label><input class="form-input" name="quantity" placeholder="e.g., 2 units" maxlength="80"></div>
+          <div class="form-group"><label class="form-label">Budget Range</label>
+            <select class="form-select" name="budget">
+              <option value="">Select range</option>
+              <option>Under ₹1 Lakh</option><option>₹1–5 Lakhs</option><option>₹5–10 Lakhs</option>
+              <option>₹10–25 Lakhs</option><option>₹25–50 Lakhs</option><option>₹50 Lakhs+</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group"><label class="form-label">Additional Requirements</label><textarea class="form-textarea" name="message" rows="5" maxlength="2000"></textarea></div>
+        <button class="btn btn--primary btn--lg" type="submit">Submit Request</button>
+      </form>
+    </div>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,24 @@
+{% extends "admin/layout.njk" %}
+{% from "admin/_macros.njk" import listTop, delBtn, activePill %}
+{% block content %}
+<div class="card">
+  {{ listTop('Stats / Counters', '/admin/stats/new', 'Add Stat') }}
+  {% if items.length %}
+  <div class="table-wrap"><table class="data">
+    <thead><tr><th>Label</th><th>Value</th><th>Suffix</th><th>Order</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+      {% for s in items %}
+      <tr>
+        <td><strong>{{ s.Label }}</strong></td>
+        <td>{{ s.Value }}</td>
+        <td>{{ s.Suffix }}</td>
+        <td>{{ s.DisplayOrder }}</td>
+        <td>{{ activePill(s.IsActive) }}</td>
+        <td><div class="row-actions"><a class="btn btn-outline btn-sm" href="/admin/stats/{{ s.StatId }}/edit">Edit</a>{{ delBtn('/admin/stats/' + (s.StatId|string) + '/delete', 'stat') }}</div></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table></div>
+  {% else %}<div class="empty">No stats yet. <a href="/admin/stats/new">Add one</a>.</div>{% endif %}
+</div>
+{% endblock %}

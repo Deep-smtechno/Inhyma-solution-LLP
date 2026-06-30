@@ -1,0 +1,55 @@
+{% extends "admin/layout.njk" %}
+{% from "admin/_macros.njk" import delBtn, pagination %}
+{% from "admin/_icons.njk" import icon %}
+{% block content %}
+
+<div class="page-toolbar">
+  <div class="seg">
+    <a href="/admin/leads" class="{{ 'active' if not status }}">All</a>
+    <a href="/admin/leads?status=new" class="{{ 'active' if status == 'new' }}">New</a>
+    <a href="/admin/leads?status=contacted" class="{{ 'active' if status == 'contacted' }}">Contacted</a>
+    <a href="/admin/leads?status=quoted" class="{{ 'active' if status == 'quoted' }}">Quoted</a>
+    <a href="/admin/leads?status=closed" class="{{ 'active' if status == 'closed' }}">Closed</a>
+    <a href="/admin/leads?status=lost" class="{{ 'active' if status == 'lost' }}">Lost</a>
+  </div>
+  <span class="muted" style="margin-left:auto;">{{ totalLeads }} lead{{ 's' if totalLeads != 1 }}</span>
+</div>
+
+<div class="card">
+  {% if items.length %}
+  <div class="table-wrap">
+  <table class="data">
+    <thead><tr><th>Name</th><th>Contact</th><th>Source</th><th>Requirement</th><th>Status</th><th>Next Reminder</th><th>Date</th><th></th></tr></thead>
+    <tbody>
+      {% for l in items %}
+      <tr style="cursor:pointer;" onclick="if(event.target.tagName!=='A'&&event.target.tagName!=='BUTTON')location.href='/admin/leads/{{ l.LeadId }}'">
+        <td>
+          <div style="display:flex;align-items:center;gap:11px;">
+            <span class="avatar" style="width:34px;height:34px;font-size:13px;">{{ l.Name[0] | upper }}</span>
+            <div><strong>{{ l.Name }}</strong>{% if l.Company %}<br><span class="muted">{{ l.Company }}</span>{% endif %}</div>
+          </div>
+        </td>
+        <td>{{ l.Mobile or '—' }}<br><span class="muted">{{ l.Email or '' }}</span></td>
+        <td><span class="pill pill--gray pill--plain">{{ l.Source }}</span></td>
+        <td>{{ l.ProductRequirement or '—' }}</td>
+        <td><span class="pill {{ 'pill--new' if l.Status == 'new' else ('pill--on' if l.Status in ['quoted','closed'] else 'pill--gray') }}">{{ l.Status }}</span></td>
+        <td>
+          {% if l.NextReminderDate %}
+          <span style="display:inline-flex;align-items:center;gap:4px;background:#fff7ed;color:#ea580c;border:1px solid #fed7aa;padding:4px 8px;border-radius:4px;font-size:11px;font-weight:600;">
+            🗓️ {{ l.NextReminderDate | date }}
+          </span>
+          {% else %}
+          <span class="muted" style="font-size:12px;">—</span>
+          {% endif %}
+        </td>
+        <td class="muted">{{ l.CreatedAt | date }}</td>
+        <td><div class="row-actions"><a class="btn btn-outline btn-sm" href="/admin/leads/{{ l.LeadId }}">View</a>{{ delBtn('/admin/leads/' + (l.LeadId|string) + '/delete', 'lead') }}</div></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {{ pagination(currentPage, totalPages, '/admin/leads', status) }}
+  {% else %}<div class="empty">{{ icon('leads') }}<div>No leads{% if status %} with status "{{ status }}"{% endif %} yet.</div></div>{% endif %}
+</div>
+{% endblock %}

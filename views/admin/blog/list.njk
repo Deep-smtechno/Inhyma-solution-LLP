@@ -1,0 +1,24 @@
+{% extends "admin/layout.njk" %}
+{% from "admin/_macros.njk" import listTop, delBtn %}
+{% block content %}
+<div class="card">
+  {{ listTop('Blog Posts', '/admin/blog/new', 'Add Post') }}
+  {% if items.length %}
+  <div class="table-wrap"><table class="data">
+    <thead><tr><th>Image</th><th>Title</th><th>Tag</th><th>Published</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+      {% for b in items %}
+      <tr>
+        <td>{% if b.ImagePath %}<img class="thumb" src="{{ b.ImagePath }}">{% else %}<span style="font-size:22px;">{{ b.IconEmoji or '📰' }}</span>{% endif %}</td>
+        <td><strong>{{ b.Title }}</strong></td>
+        <td>{% if b.Tag %}<span class="pill pill--gray">{{ b.Tag }}</span>{% endif %}</td>
+        <td class="muted">{{ b.PublishedDate | date }}</td>
+        <td><span class="pill {{ 'pill--on' if b.IsPublished else 'pill--off' }}">{{ 'Published' if b.IsPublished else 'Draft' }}</span></td>
+        <td><div class="row-actions"><a class="btn btn-outline btn-sm" href="/admin/blog/{{ b.PostId }}/edit">Edit</a>{{ delBtn('/admin/blog/' + (b.PostId|string) + '/delete', 'post') }}</div></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table></div>
+  {% else %}<div class="empty">No posts yet. <a href="/admin/blog/new">Write one</a>.</div>{% endif %}
+</div>
+{% endblock %}

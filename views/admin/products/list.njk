@@ -1,0 +1,26 @@
+{% extends "admin/layout.njk" %}
+{% from "admin/_macros.njk" import listTop, delBtn, activePill, pagination %}
+{% block content %}
+<div class="card">
+  {{ listTop('All Products', '/admin/products/new', 'Add Product') }}
+  {% if items.length %}
+  <div class="table-wrap"><table class="data">
+    <thead><tr><th>Image</th><th>Name</th><th>Category</th><th>Badge</th><th>Featured</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+      {% for p in items %}
+      <tr>
+        <td>{% if p.PrimaryImage %}<img class="thumb" src="{{ p.PrimaryImage }}">{% else %}<span class="muted">—</span>{% endif %}</td>
+        <td><strong>{{ p.Name }}</strong></td>
+        <td>{{ p.CategoryName or p.CategoryLabel or '—' }}</td>
+        <td>{% if p.Badge %}<span class="pill pill--gray">{{ p.Badge }}</span>{% else %}<span class="muted">—</span>{% endif %}</td>
+        <td>{{ '⭐' if p.IsFeatured else '' }}</td>
+        <td>{{ activePill(p.IsActive) }}</td>
+        <td><div class="row-actions"><a class="btn btn-outline btn-sm" href="/admin/products/{{ p.ProductId }}/edit">Edit</a>{{ delBtn('/admin/products/' + (p.ProductId|string) + '/delete', 'product') }}</div></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table></div>
+  {{ pagination(currentPage, totalPages, '/admin/products') }}
+  {% else %}<div class="empty">No products yet. <a href="/admin/products/new">Add one</a>.</div>{% endif %}
+</div>
+{% endblock %}

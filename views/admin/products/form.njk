@@ -1,0 +1,86 @@
+{% extends "admin/layout.njk" %}
+{% from "admin/_macros.njk" import repeater, toggle %}
+{% block content %}
+<div class="card">
+  <div class="card__header"><h2>{{ 'Edit' if item else 'New' }} Product</h2><a class="btn btn-ghost btn-sm" href="/admin/products">← Back</a></div>
+  <div class="card__body">
+    <form method="post" action="/admin/products{% if item %}/{{ item.ProductId }}{% endif %}">
+      <div class="form-grid">
+        <div class="fg"><label>Name *</label><input type="text" name="name" data-slug-source required value="{{ item.Name }}"></div>
+        <div class="fg"><label>Slug</label><input type="text" name="slug" data-slug-target value="{{ item.Slug }}"><div class="hint">Leave blank to auto-generate.</div></div>
+
+        <div class="fg"><label>Category</label>
+          <select name="categoryId">
+            <option value="">— None —</option>
+            {% for c in categories %}<option value="{{ c.CategoryId }}" {{ 'selected' if item and item.CategoryId == c.CategoryId }}>{{ c.Name }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="fg"><label>Category Label (display text)</label><input type="text" name="categoryLabel" value="{{ item.CategoryLabel }}" placeholder="e.g. Packaging Machines"></div>
+
+        <div class="fg fg--full"><label>Short Description</label><textarea name="shortDescription">{{ item.ShortDescription }}</textarea></div>
+        <div class="fg fg--full"><label>Full Description</label><textarea name="description" rows="6">{{ item.Description }}</textarea><div class="hint">HTML allowed.</div></div>
+
+        <div class="fg"><label>Badge</label><input type="text" name="badge" value="{{ item.Badge }}" placeholder="e.g. Best Seller, New"></div>
+        <div class="fg"><label>Display Order</label><input type="number" name="displayOrder" value="{{ item.DisplayOrder or 0 }}"></div>
+
+        <div class="fg"><label>Featured</label>{{ toggle('isFeatured', 'Show on homepage', item and item.IsFeatured) }}</div>
+        <div class="fg"><label>Status</label>{{ toggle('isActive', 'Active (visible on site)', (not item) or item.IsActive) }}</div>
+
+        {{ repeater('feature', 'Feature Chips (e.g. ⚡ 60 PPM)', features, 'FeatureText', 'e.g. ⚡ 60 PPM') }}
+
+        <div class="fg fg--full">
+          <label>Specifications</label>
+          <div id="specRepeater">
+            {% for s in specs %}
+            <div class="repeater__row">
+              <input type="text" name="spec_name" value="{{ s.SpecName }}" placeholder="Spec name">
+              <input type="text" name="spec_value" value="{{ s.SpecValue }}" placeholder="Value">
+              <button type="button" class="repeater__remove" onclick="this.parentElement.remove()">×</button>
+            </div>
+            {% endfor %}
+            <div class="repeater__row">
+              <input type="text" name="spec_name" placeholder="Spec name (e.g. Speed)">
+              <input type="text" name="spec_value" placeholder="Value (e.g. 60 PPM)">
+              <button type="button" class="repeater__remove" onclick="this.parentElement.remove()">×</button>
+            </div>
+          </div>
+          <button type="button" class="btn btn-outline btn-sm" onclick="addSpecRow(this)">+ Add spec</button>
+        </div>
+
+        {{ repeater('application', 'Application Chips (e.g. 🍿 Snacks)', applications, 'AppText', 'e.g. 🍿 Snacks') }}
+      </div>
+
+      <div class="form-actions"><button class="btn btn-primary" type="submit">Save Product</button><a class="btn btn-outline" href="/admin/products">Cancel</a></div>
+    </form>
+  </div>
+</div>
+
+{% if item %}
+<div class="card" style="margin-top:24px;">
+  <div class="card__header"><h2>Product Images</h2></div>
+  <div class="card__body">
+    <form method="post" action="/admin/products/{{ item.ProductId }}/images" enctype="multipart/form-data" style="margin-bottom:20px;">
+      <div class="fg fg--full"><label>Upload Images (up to 10)</label><input type="file" name="images" accept="image/*" multiple required></div>
+      <button class="btn btn-primary btn-sm" type="submit">Upload</button>
+    </form>
+
+    {% if images.length %}
+    <div class="img-grid">
+      {% for img in images %}
+      <div class="img-tile">
+        {% if img.IsPrimary %}<span class="img-tile__primary">PRIMARY</span>{% endif %}
+        <img src="{{ img.FilePath }}" alt="{{ img.AltText }}">
+        <div class="img-tile__actions">
+          {% if not img.IsPrimary %}<form method="post" action="/admin/products/images/{{ img.ImageId }}/primary"><button class="btn btn-outline btn-sm" type="submit">Set primary</button></form>{% else %}<span></span>{% endif %}
+          <form method="post" action="/admin/products/images/{{ img.ImageId }}/delete" onsubmit="return confirm('Delete this image?');"><button class="btn btn-danger btn-sm" type="submit">✕</button></form>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}<p class="muted">No images uploaded yet.</p>{% endif %}
+  </div>
+</div>
+{% else %}
+<p class="muted" style="margin-top:16px;">💡 Save the product first, then you can upload images.</p>
+{% endif %}
+{% endblock %}

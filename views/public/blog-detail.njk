@@ -1,0 +1,31 @@
+{% extends "layout.njk" %}
+{% from "public/_macros.njk" import banner %}
+
+{% block content %}
+{{ banner(post.Title, null, [{label:'Knowledge Center', url:'/blog'}, {label: post.Title | truncate(40)}]) }}
+
+<section class="section">
+  <div class="container" style="max-width:780px;">
+    <div class="blog-card__meta" style="margin-bottom:var(--space-4);"><span class="blog-card__tag">{{ post.Tag }}</span><span>{{ post.PublishedDate | date }}</span><span>•</span><span>{{ post.ReadTime }}</span></div>
+    {% if post.ImagePath %}<img src="{{ post.ImagePath }}" alt="{{ post.Title }}" style="width:100%;border-radius:var(--radius-lg);margin-bottom:var(--space-6);">{% endif %}
+    {% if post.Excerpt %}<p style="font-size:var(--fs-lg);color:var(--color-gray-600);">{{ post.Excerpt }}</p>{% endif %}
+    <div class="blog-body" style="color:var(--color-gray-700);line-height:1.8;">{{ post.Body | safe }}</div>
+  </div>
+</section>
+
+{% if related.length %}
+<section class="section section--alt">
+  <div class="container">
+    <div class="section-header"><span class="section-label">Keep Reading</span><h2 class="section-title">Related Articles</h2></div>
+    <div class="blog-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:var(--space-6);margin-top:var(--space-6);">
+      {% for b in related %}
+      <a href="/blog/{{ b.Slug }}" class="blog-card reveal">
+        <div class="blog-card__image">{% if b.ImagePath %}<img src="{{ b.ImagePath }}" alt="{{ b.Title }}" style="width:100%;height:100%;object-fit:cover;">{% else %}<div class="category-card__image-placeholder" style="height:100%;font-size:2rem;">{{ b.IconEmoji or '📦' }}</div>{% endif %}</div>
+        <div class="blog-card__body"><span class="blog-card__tag">{{ b.Tag }}</span><h3 class="blog-card__title">{{ b.Title }}</h3><div class="blog-card__meta"><span>{{ b.PublishedDate | date }}</span><span>•</span><span>{{ b.ReadTime }}</span></div></div>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+{% endblock %}

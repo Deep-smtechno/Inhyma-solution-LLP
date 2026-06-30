@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign in — INHYMA Admin</title>
+  <link rel="icon" type="image/png" href="/logo.png">
+  <link rel="stylesheet" href="/admin.css">
+</head>
+<body class="admin">
+  <div class="login-wrap">
+    <div class="login-card">
+      <div class="login-logo"><span class="mark">INHYMA<span> Admin</span></span></div>
+      <h1>Welcome back</h1>
+      <p class="sub">Sign in to manage your website content</p>
+      {% if flash.error.length %}<div class="flash flash--error">⚠ {{ flash.error[0] }}</div>{% endif %}
+      <form method="post" action="/admin/login">
+        <div class="fg">
+          <label>Username or Email</label>
+          <input type="text" name="login" required autofocus placeholder="admin">
+        </div>
+        <div class="fg">
+          <label>Password</label>
+          <input type="password" name="password" required placeholder="••••••••">
+        </div>
+        <button class="btn btn-primary btn-lg" type="submit" style="width:100%;">Sign In</button>
+      </form>
+    </div>
+  </div>
+</body>
+</html>

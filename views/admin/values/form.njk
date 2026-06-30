@@ -1,0 +1,19 @@
+{% extends "admin/layout.njk" %}
+{% from "admin/_macros.njk" import toggle %}
+{% block content %}
+<div class="card">
+  <div class="card__header"><h2>{{ 'Edit' if item else 'New' }} Core Value</h2><a class="btn btn-ghost btn-sm" href="/admin/values">← Back</a></div>
+  <div class="card__body">
+    <form method="post" action="/admin/values{% if item %}/{{ item.ValueId }}{% endif %}">
+      <div class="form-grid">
+        <div class="fg"><label>Icon Emoji</label><input type="text" name="icon" value="{{ item.Icon }}" placeholder="🤝"></div>
+        <div class="fg"><label>Title *</label><input type="text" name="title" required value="{{ item.Title }}"></div>
+        <div class="fg fg--full"><label>Body</label><textarea name="body">{{ item.Body }}</textarea></div>
+        <div class="fg"><label>Display Order</label><input type="number" name="displayOrder" value="{{ item.DisplayOrder or 0 }}"></div>
+        <div class="fg"><label>Status</label>{{ toggle('isActive', 'Active', (not item) or item.IsActive) }}</div>
+      </div>
+      <div class="form-actions"><button class="btn btn-primary" type="submit">Save Value</button><a class="btn btn-outline" href="/admin/values">Cancel</a></div>
+    </form>
+  </div>
+</div>
+{% endblock %}

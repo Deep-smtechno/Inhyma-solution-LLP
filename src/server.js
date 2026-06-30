@@ -1,0 +1,103 @@
+/* ============================================================
+   INHYMA Website — Express server entry
+   ============================================================ */
+require('dotenv').config();
+const path = require('path');
+const express = require('express');
+const session = require('express-session');
+const flash = require('connect-flash');
+const nunjucks = require('nunjucks');
+
+const { exposeLocals } = require('./middleware/auth');
+const publicRoutes = require('./routes/public');
+const adminRoutes = require('./routes/admin');
+const apiRoutes = require('./routes/api');
+
+const app = express();
+const ROOT = path.join(__dirname, '..');
+
+/* ---------- View engine (Nunjucks / Jinja-style) ---------- */
+const env = nunjucks.configure(path.join(ROOT, 'views'), {
+  autoescape: true,
+  express: app,
+  watch: process.env.NODE_ENV !== 'production',
+});
+app.set('view engine', 'njk');
+
+// Template filters
+env.addFilter('date', (d, fmt) => {
+  if (!d) return '';
+  const dt = new Date(d);
+  const opts = { year: 'numeric', month: 'long', day: '2-digit' };
+  return dt.toLocaleDateString('en-US', opts);
+});
+env.addFilter('isodate', (d) => {
+  if (!d) return '';
+  const dt = new Date(d);
+  if (isNaN(dt)) return '';
+  return dt.toISOString().slice(0, 10);
+});
+env.addFilter('truncate', (s, n) => {
+  if (!s) return '';
+  return s.length > n ? s.slice(0, n).trim() + '…' : s;
+});
+
+/* ---------- Body parsing & static ---------- */
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
+app.use(express.static(path.join(ROOT, 'public')));
+
+/* ---------- Sessions & flash ---------- */
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'inhyma-dev-secret',
+  resave: false,
+  saveUninitialized: false,
+  cookie: { maxAge: 1000 * 60 * 60 * 8 }, // 8h
+}));
+app.use(flash());
+app.use(exposeLocals);
+
+/* ---------- Routes ---------- */
+app.use('/admin', adminRoutes);
+app.use('/api', apiRoutes);
+app.use('/', publicRoutes);
+
+/* ---------- 404 ---------- */
+app.use((req, res) => {
+  res.status(404).render('public/404', { title: 'Page Not Found' });
+});
+
+/* ---------- Error handler ---------- */
+app.use((err, req, res, next) => {
+  console.error(err);
+  res.status(500);
+  if (req.path.startsWith('/admin')) {
+    req.flash && req.flash('error', err.message || 'Something went wrong');
+    return res.redirect('back');
+  }
+  res.render('public/error', { title: 'Error', message: process.env.NODE_ENV === 'production' ? 'Something went wrong.' : err.message });
+});
+
+const PORT = parseInt(process.env.PORT, 10) || 5000;
+const MAX_PORT_TRIES = 10;
+
+function startServer(port, attempt = 0) {
+  const server = app.listen(port, () => {
+    console.log(`\n🚀 INHYMA site running:  http://localhost:${port}`);
+    console.log(`🔐 Admin panel:         http://localhost:${port}/admin\n`);
+  });
+  server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE' && attempt < MAX_PORT_TRIES) {
+      const next = port + 1;
+      console.warn(`⚠ Port ${port} is in use — trying ${next}...`);
+      startServer(next, attempt + 1);
+    } else {
+      console.error('❌ Failed to start server:', err.message);
+      process.exit(1);
+    }
+  });
+}
+
+startServer(PORT);
+
+module.exports = app;
