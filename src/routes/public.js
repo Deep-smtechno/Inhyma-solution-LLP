@@ -25,7 +25,7 @@ router.get('/', async (req, res, next) => {
       query('usp_Category_GetAll', { IncludeInactive: 0 }),
       query('usp_Industry_GetAll', { IncludeInactive: 0 }),
       query('usp_Stat_GetAll', { IncludeInactive: 0 }),
-      query('usp_Blog_GetAll', { Top: 3 }),
+      query('usp_Blog_Manage', { Action: 'GET_ALL', Top: 3 }),
       query('usp_Testimonial_GetAll', { IncludeInactive: 0 }),
     ]);
     res.render('public/index', {
@@ -163,7 +163,7 @@ router.get('/about', async (req, res, next) => {
 /* ---------------- Blog ---------------- */
 router.get('/blog', async (req, res, next) => {
   try {
-    const posts = await query('usp_Blog_GetAll', {});
+    const posts = await query('usp_Blog_Manage', { Action: 'GET_ALL' });
     res.render('public/blog', {
       title: 'Industrial Packaging & Automation Blog',
       metaDescription: 'Get the latest industry news, buying guides, ROI studies, and tech trends about packaging machinery, factory automation, and warehouse logistics.',
@@ -174,9 +174,9 @@ router.get('/blog', async (req, res, next) => {
 
 router.get('/blog/:slug', async (req, res, next) => {
   try {
-    const post = await queryOne('usp_Blog_GetBySlug', { Slug: req.params.slug });
+    const post = await queryOne('usp_Blog_Manage', { Action: 'GET_BY_SLUG', Slug: req.params.slug });
     if (!post) return res.status(404).render('public/404', { title: 'Article Not Found' });
-    const related = await query('usp_Blog_GetRelated', { PostId: post.PostId, Top: 3 });
+    const related = await query('usp_Blog_Manage', { Action: 'GET_RELATED', PostId: post.PostId, Top: 3 });
     res.render('public/blog-detail', {
       title: post.Title,
       metaDescription: post.Excerpt ? post.Excerpt.slice(0, 160) : `Read our article on "${post.Title}" and stay updated with industrial technology trends and insights.`,
@@ -278,7 +278,7 @@ router.get('/sitemap.xml', async (req, res, next) => {
       query('usp_Category_GetAll', { IncludeInactive: 0 }),
       query('usp_Industry_GetAll', { IncludeInactive: 0 }),
       query('usp_Solution_GetAll', { IncludeInactive: 0 }),
-      query('usp_Blog_GetAll', {}),
+      query('usp_Blog_Manage', { Action: 'GET_ALL' }),
     ]);
 
     let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';

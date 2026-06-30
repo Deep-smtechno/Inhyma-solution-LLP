@@ -597,88 +597,69 @@ GO
 /* ============================================================
    BLOG
    ============================================================ */
-CREATE OR ALTER PROCEDURE dbo.usp_Blog_GetAll
+CREATE OR ALTER PROCEDURE dbo.usp_Blog_Manage
+    @Action             VARCHAR(20), -- 'GET_ALL', 'GET_BY_ID', 'GET_BY_SLUG', 'GET_RELATED', 'CREATE', 'UPDATE', 'DELETE'
+    @PostId             INT = NULL,
+    @Title              NVARCHAR(250) = NULL,
+    @Slug               NVARCHAR(270) = NULL,
+    @Tag                NVARCHAR(80) = NULL,
+    @Excerpt            NVARCHAR(800) = NULL,
+    @Body               NVARCHAR(MAX) = NULL,
+    @ImagePath          NVARCHAR(400) = NULL,
+    @IconEmoji          NVARCHAR(20) = NULL,
+    @ReadTime           NVARCHAR(40) = NULL,
+    @Author             NVARCHAR(120) = NULL,
+    @PublishedDate      DATE = NULL,
+    @IsPublished        BIT = NULL,
     @IncludeUnpublished BIT = 0,
-    @Top INT = NULL
+    @Top                INT = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
-    SELECT TOP (COALESCE(@Top, 100000))
-        PostId, Title, Slug, Tag, Excerpt, ImagePath, IconEmoji, ReadTime, Author, PublishedDate, IsPublished
-    FROM dbo.BlogPosts
-    WHERE (@IncludeUnpublished = 1 OR IsPublished = 1)
-    ORDER BY PublishedDate DESC, PostId DESC;
-END
-GO
 
-CREATE OR ALTER PROCEDURE dbo.usp_Blog_GetById
-    @PostId INT
-AS
-BEGIN
-    SET NOCOUNT ON;
-    SELECT PostId, Title, Slug, Tag, Excerpt, Body, ImagePath, IconEmoji, ReadTime, Author, PublishedDate, IsPublished
-    FROM dbo.BlogPosts WHERE PostId = @PostId;
-END
-GO
-
-CREATE OR ALTER PROCEDURE dbo.usp_Blog_GetBySlug
-    @Slug NVARCHAR(270)
-AS
-BEGIN
-    SET NOCOUNT ON;
-    SELECT PostId, Title, Slug, Tag, Excerpt, Body, ImagePath, IconEmoji, ReadTime, Author, PublishedDate, IsPublished
-    FROM dbo.BlogPosts WHERE Slug = @Slug;
-END
-GO
-
-CREATE OR ALTER PROCEDURE dbo.usp_Blog_GetRelated
-    @PostId INT, @Top INT = 3
-AS
-BEGIN
-    SET NOCOUNT ON;
-    SELECT TOP (@Top) PostId, Title, Slug, Tag, IconEmoji, ImagePath, ReadTime, PublishedDate
-    FROM dbo.BlogPosts
-    WHERE IsPublished = 1 AND PostId <> @PostId
-    ORDER BY PublishedDate DESC, PostId DESC;
-END
-GO
-
-CREATE OR ALTER PROCEDURE dbo.usp_Blog_Create
-    @Title NVARCHAR(250), @Slug NVARCHAR(270), @Tag NVARCHAR(80) = NULL,
-    @Excerpt NVARCHAR(800) = NULL, @Body NVARCHAR(MAX) = NULL, @ImagePath NVARCHAR(400) = NULL,
-    @IconEmoji NVARCHAR(20) = NULL, @ReadTime NVARCHAR(40) = NULL, @Author NVARCHAR(120) = NULL,
-    @PublishedDate DATE = NULL, @IsPublished BIT = 1
-AS
-BEGIN
-    SET NOCOUNT ON;
-    INSERT INTO dbo.BlogPosts (Title, Slug, Tag, Excerpt, Body, ImagePath, IconEmoji, ReadTime, Author, PublishedDate, IsPublished)
-    VALUES (@Title, @Slug, @Tag, @Excerpt, @Body, @ImagePath, @IconEmoji, @ReadTime, @Author, @PublishedDate, @IsPublished);
-    SELECT SCOPE_IDENTITY() AS PostId;
-END
-GO
-
-CREATE OR ALTER PROCEDURE dbo.usp_Blog_Update
-    @PostId INT, @Title NVARCHAR(250), @Slug NVARCHAR(270), @Tag NVARCHAR(80) = NULL,
-    @Excerpt NVARCHAR(800) = NULL, @Body NVARCHAR(MAX) = NULL, @ImagePath NVARCHAR(400) = NULL,
-    @IconEmoji NVARCHAR(20) = NULL, @ReadTime NVARCHAR(40) = NULL, @Author NVARCHAR(120) = NULL,
-    @PublishedDate DATE = NULL, @IsPublished BIT = 1
-AS
-BEGIN
-    SET NOCOUNT ON;
-    UPDATE dbo.BlogPosts
-    SET Title = @Title, Slug = @Slug, Tag = @Tag, Excerpt = @Excerpt, Body = @Body,
-        ImagePath = COALESCE(@ImagePath, ImagePath), IconEmoji = @IconEmoji, ReadTime = @ReadTime,
-        Author = @Author, PublishedDate = @PublishedDate, IsPublished = @IsPublished, UpdatedAt = SYSUTCDATETIME()
-    WHERE PostId = @PostId;
-END
-GO
-
-CREATE OR ALTER PROCEDURE dbo.usp_Blog_Delete
-    @PostId INT
-AS
-BEGIN
-    SET NOCOUNT ON;
-    DELETE FROM dbo.BlogPosts WHERE PostId = @PostId;
+    IF @Action = 'GET_ALL'
+    BEGIN
+        SELECT TOP (COALESCE(@Top, 100000))
+            PostId, Title, Slug, Tag, Excerpt, ImagePath, IconEmoji, ReadTime, Author, PublishedDate, IsPublished
+        FROM dbo.BlogPosts
+        WHERE (@IncludeUnpublished = 1 OR IsPublished = 1)
+        ORDER BY PublishedDate DESC, PostId DESC;
+    END
+    ELSE IF @Action = 'GET_BY_ID'
+    BEGIN
+        SELECT PostId, Title, Slug, Tag, Excerpt, Body, ImagePath, IconEmoji, ReadTime, Author, PublishedDate, IsPublished
+        FROM dbo.BlogPosts WHERE PostId = @PostId;
+    END
+    ELSE IF @Action = 'GET_BY_SLUG'
+    BEGIN
+        SELECT PostId, Title, Slug, Tag, Excerpt, Body, ImagePath, IconEmoji, ReadTime, Author, PublishedDate, IsPublished
+        FROM dbo.BlogPosts WHERE Slug = @Slug;
+    END
+    ELSE IF @Action = 'GET_RELATED'
+    BEGIN
+        SELECT TOP (COALESCE(@Top, 3)) PostId, Title, Slug, Tag, IconEmoji, ImagePath, ReadTime, PublishedDate
+        FROM dbo.BlogPosts
+        WHERE IsPublished = 1 AND PostId <> @PostId
+        ORDER BY PublishedDate DESC, PostId DESC;
+    END
+    ELSE IF @Action = 'CREATE'
+    BEGIN
+        INSERT INTO dbo.BlogPosts (Title, Slug, Tag, Excerpt, Body, ImagePath, IconEmoji, ReadTime, Author, PublishedDate, IsPublished)
+        VALUES (@Title, @Slug, @Tag, @Excerpt, @Body, @ImagePath, @IconEmoji, @ReadTime, @Author, @PublishedDate, COALESCE(@IsPublished, 1));
+        SELECT SCOPE_IDENTITY() AS PostId;
+    END
+    ELSE IF @Action = 'UPDATE'
+    BEGIN
+        UPDATE dbo.BlogPosts
+        SET Title = @Title, Slug = @Slug, Tag = @Tag, Excerpt = @Excerpt, Body = @Body,
+            ImagePath = COALESCE(@ImagePath, ImagePath), IconEmoji = @IconEmoji, ReadTime = @ReadTime,
+            Author = @Author, PublishedDate = @PublishedDate, IsPublished = @IsPublished, UpdatedAt = SYSUTCDATETIME()
+        WHERE PostId = @PostId;
+    END
+    ELSE IF @Action = 'DELETE'
+    BEGIN
+        DELETE FROM dbo.BlogPosts WHERE PostId = @PostId;
+    END
 END
 GO
 

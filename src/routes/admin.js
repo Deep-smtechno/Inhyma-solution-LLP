@@ -359,7 +359,7 @@ router.post('/solutions/:id/delete', async (req, res, next) => {
    ============================================================ */
 router.get('/blog', async (req, res, next) => {
   try {
-    res.render('admin/blog/list', { title: 'Blog Posts', items: await query('usp_Blog_GetAll', { IncludeUnpublished: 1 }) });
+    res.render('admin/blog/list', { title: 'Blog Posts', items: await query('usp_Blog_Manage', { Action: 'GET_ALL', IncludeUnpublished: 1 }) });
   } catch (err) { next(err); }
 });
 
@@ -369,7 +369,7 @@ router.get('/blog/new', (req, res) => {
 
 router.get('/blog/:id/edit', async (req, res, next) => {
   try {
-    const item = await queryOne('usp_Blog_GetById', { PostId: toInt(req.params.id) });
+    const item = await queryOne('usp_Blog_Manage', { Action: 'GET_BY_ID', PostId: toInt(req.params.id) });
     if (!item) { req.flash('error', 'Post not found'); return res.redirect('/admin/blog'); }
     res.render('admin/blog/form', { title: 'Edit Post', item });
   } catch (err) { next(err); }
@@ -389,15 +389,15 @@ router.post('/blog/:id?', uploader('blog').single('image'), async (req, res, nex
       PublishedDate: nullIfEmpty(b.publishedDate) ? { type: sql.Date, value: b.publishedDate } : { type: sql.Date, value: null },
       IsPublished: toBit(b.isPublished),
     };
-    if (id) { await execProc('usp_Blog_Update', { PostId: id, ...params }); req.flash('success', 'Post updated'); }
-    else { await execProc('usp_Blog_Create', params); req.flash('success', 'Post created'); }
+    if (id) { await execProc('usp_Blog_Manage', { Action: 'UPDATE', PostId: id, ...params }); req.flash('success', 'Post updated'); }
+    else { await execProc('usp_Blog_Manage', { Action: 'CREATE', ...params }); req.flash('success', 'Post created'); }
     res.redirect('/admin/blog');
   } catch (err) { next(err); }
 });
 
 router.post('/blog/:id/delete', async (req, res, next) => {
   try {
-    await execProc('usp_Blog_Delete', { PostId: toInt(req.params.id) });
+    await execProc('usp_Blog_Manage', { Action: 'DELETE', PostId: toInt(req.params.id) });
     req.flash('success', 'Post deleted');
     res.redirect('/admin/blog');
   } catch (err) { next(err); }
