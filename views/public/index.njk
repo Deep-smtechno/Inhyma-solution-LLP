@@ -39,7 +39,7 @@
       {% for c in categories %}
       <a href="/products?category={{ c.Slug }}" class="category-card reveal">
         <div class="category-card__image">
-          {% if c.ImagePath %}<img src="{{ c.ImagePath }}" alt="{{ c.Name }}" style="width:100%;height:100%;object-fit:cover;">
+          {% if c.ImagePath %}<img src="{{ c.ImagePath }}" alt="{{ c.Name }}" loading="lazy" style="width:100%;height:100%;object-fit:cover;">
           {% else %}<div class="category-card__image-placeholder" style="height:100%;"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 12h18"/></svg></div>{% endif %}
         </div>
         <div class="category-card__body" style="padding:var(--space-5);">
@@ -154,7 +154,7 @@
     <div class="blog-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:var(--space-6);margin-top:var(--space-8);">
       {% for b in blogs %}
       <a href="/blog/{{ b.Slug }}" class="blog-card reveal">
-        <div class="blog-card__image">{% if b.ImagePath %}<img src="{{ b.ImagePath }}" alt="{{ b.Title }}" style="width:100%;height:100%;object-fit:cover;">{% else %}<div class="category-card__image-placeholder" style="height:100%;font-size:2rem;">{{ b.IconEmoji or '📦' }}</div>{% endif %}</div>
+        <div class="blog-card__image">{% if b.ImagePath %}<img src="{{ b.ImagePath }}" alt="{{ b.Title }}" loading="lazy" style="width:100%;height:100%;object-fit:cover;">{% else %}<div class="category-card__image-placeholder" style="height:100%;font-size:2rem;">{{ b.IconEmoji or '📦' }}</div>{% endif %}</div>
         <div class="blog-card__body"><span class="blog-card__tag">{{ b.Tag }}</span><h3 class="blog-card__title">{{ b.Title }}</h3><p class="blog-card__excerpt">{{ b.Excerpt | truncate(110) }}</p><div class="blog-card__meta"><span>{{ b.PublishedDate | date }}</span><span>•</span><span>{{ b.ReadTime }}</span></div></div>
       </a>
       {% endfor %}
@@ -269,7 +269,7 @@ document.addEventListener("DOMContentLoaded", function() {
     canvas.style.height = `${rect.height}px`;
   }
   
-  fetch('/data/world_dots.json')
+  fetch('/data/world_dots_slim.json')
     .then(r => r.json())
     .then(data => {
       dots = data;
@@ -305,8 +305,8 @@ document.addEventListener("DOMContentLoaded", function() {
     // Draw dot matrix world map
     dots.forEach(d => {
       const coords = getCanvasCoords(d.x, d.y, w, h);
-      const isActive = (d.code && (d.code === hoverCountryCode || d.code === activeCountryCode));
-      const isTarget = d.isTarget === 1;
+      const isActive = (d.c && (d.c === hoverCountryCode || d.c === activeCountryCode));
+      const isTarget = d.t === 1;
       if (isActive) {
         ctx.fillStyle = '#1B3A5C'; // Primary navy (high contrast)
         ctx.shadowColor = 'rgba(27, 58, 92, 0.3)';
@@ -375,7 +375,7 @@ document.addEventListener("DOMContentLoaded", function() {
     let closestDot = null, minDist = 8;
     if (!hoveredCity) {
       dots.forEach(d => {
-        if (!d.isTarget) return;
+        if (!d.t) return;
         const coords = getCanvasCoords(d.x, d.y, rect.width, rect.height);
         const dx = mouseX - coords.x, dy = mouseY - coords.y;
         const dist = Math.sqrt(dx*dx + dy*dy);
@@ -392,11 +392,11 @@ document.addEventListener("DOMContentLoaded", function() {
       tooltip.style.top = `${e.clientY - rect.top - 15}px`;
       tooltip.innerHTML = `<div style="font-weight: 700; color: var(--color-primary);">${hoveredCity.name}</div><div style="font-size: 11px; color: var(--color-gray-50); margin-top: 2px;">${hoveredCity.desc}</div>`;
     } else if (closestDot) {
-      hoverCountryCode = closestDot.code;
+      hoverCountryCode = closestDot.c;
       tooltip.style.display = 'block';
       tooltip.style.left = `${e.clientX - rect.left + 15}px`;
       tooltip.style.top = `${e.clientY - rect.top - 15}px`;
-      tooltip.innerHTML = `<div style="font-weight: 700; color: var(--color-primary);">${closestDot.name}</div><div style="font-size: 11px; color: var(--color-gray-50); margin-top: 2px;">Active Regional Operations</div>`;
+      tooltip.innerHTML = `<div style="font-weight: 700; color: var(--color-primary);">${closestDot.c}</div><div style="font-size: 11px; color: var(--color-gray-50); margin-top: 2px;">Active Regional Operations</div>`;
     } else {
       hoverCountryCode = null;
       tooltip.style.display = 'none';

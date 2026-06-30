@@ -25,26 +25,30 @@ router.use(async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-/* ---------------- Home ---------------- */
+/* ---------------- Home (cached) ---------------- */
+let homeCache = null;
+let homeCacheTime = 0;
+const HOME_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
 router.get('/', async (req, res, next) => {
   try {
-    const [featured, categories, industries, stats, blogs, testimonials] = await Promise.all([
-      query('usp_Product_Manage', { Action: 'GET_ALL', FeaturedOnly: 1, Top: 6 }),
-      query('usp_Category_Manage', { Action: 'GET_ALL', IncludeInactive: 0 }),
-      query('usp_Industry_Manage', { Action: 'GET_ALL', IncludeInactive: 0 }),
-      query('usp_Stat_Manage', { Action: 'GET_ALL', IncludeInactive: 0 }),
-      query('usp_Blog_Manage', { Action: 'GET_ALL', Top: 3 }),
-      query('usp_Testimonial_Manage', { Action: 'GET_ALL', IncludeInactive: 0 }),
-    ]);
+    const now = Date.now();
+    if (!homeCache || (now - homeCacheTime) > HOME_CACHE_TTL) {
+      const [featured, categories, industries, stats, blogs, testimonials] = await Promise.all([
+        query('usp_Product_Manage', { Action: 'GET_ALL', FeaturedOnly: 1, Top: 6 }),
+        query('usp_Category_Manage', { Action: 'GET_ALL', IncludeInactive: 0 }),
+        query('usp_Industry_Manage', { Action: 'GET_ALL', IncludeInactive: 0 }),
+        query('usp_Stat_Manage', { Action: 'GET_ALL', IncludeInactive: 0 }),
+        query('usp_Blog_Manage', { Action: 'GET_ALL', Top: 3 }),
+        query('usp_Testimonial_Manage', { Action: 'GET_ALL', IncludeInactive: 0 }),
+      ]);
+      homeCache = { featured, categories, industries, stats, blogs, testimonials };
+      homeCacheTime = now;
+    }
     res.render('public/index', {
       title: 'INHYMA Solutions LLP — Industrial Packaging & Automation',
       metaDescription: 'INHYMA Solutions LLP is India\'s leading industrial hyper market, providing innovative packaging machinery, material handling equipment, and factory automation systems.',
-      featured,
-      categories,
-      industries,
-      stats,
-      blogs,
-      testimonials
+      ...homeCache,
     });
   } catch (err) { next(err); }
 });
