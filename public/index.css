@@ -3421,14 +3421,34 @@ p {
   width: 100%;
   position: relative;
   padding: var(--space-6) 0;
-  mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
-  -webkit-mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
+}
+
+.testimonials-marquee::before,
+.testimonials-marquee::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 150px;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.testimonials-marquee::before {
+  left: 0;
+  background: linear-gradient(to right, var(--color-white), transparent);
+}
+
+.testimonials-marquee::after {
+  right: 0;
+  background: linear-gradient(to left, var(--color-white), transparent);
 }
 
 .testimonials-marquee__track {
   display: flex;
   width: max-content;
   animation: testimonials-marquee-anim 40s linear infinite;
+  will-change: transform;
 }
 
 .testimonials-marquee:hover .testimonials-marquee__track {

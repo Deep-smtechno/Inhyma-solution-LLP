@@ -4,6 +4,7 @@
 require('dotenv').config();
 const path = require('path');
 const express = require('express');
+const compression = require('compression');
 const session = require('express-session');
 const flash = require('connect-flash');
 const nunjucks = require('nunjucks');
@@ -15,6 +16,9 @@ const apiRoutes = require('./routes/api');
 
 const app = express();
 const ROOT = path.join(__dirname, '..');
+
+/* ---------- Compression middleware ---------- */
+app.use(compression());
 
 /* ---------- View engine (Nunjucks / Jinja-style) ---------- */
 const env = nunjucks.configure(path.join(ROOT, 'views'), {
@@ -45,7 +49,10 @@ env.addFilter('truncate', (s, n) => {
 /* ---------- Body parsing & static ---------- */
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-app.use(express.static(path.join(ROOT, 'public')));
+app.use(express.static(path.join(ROOT, 'public'), {
+  maxAge: '1d', // Cache static assets for 1 day
+  etag: true,
+}));
 
 /* ---------- Sessions & flash ---------- */
 app.use(session({
