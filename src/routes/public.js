@@ -25,30 +25,38 @@ router.use(async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-/* ---------------- Home (cached) ---------------- */
-let homeCache = null;
-let homeCacheTime = 0;
+/* ---------------- Home (full HTML cache) ---------------- */
 const HOME_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
 router.get('/', async (req, res, next) => {
   try {
     const now = Date.now();
-    if (!homeCache || (now - homeCacheTime) > HOME_CACHE_TTL) {
-      const [featured, categories, industries, stats, blogs, testimonials] = await Promise.all([
-        query('usp_Product_Manage', { Action: 'GET_ALL', FeaturedOnly: 1, Top: 6 }),
-        query('usp_Category_Manage', { Action: 'GET_ALL', IncludeInactive: 0 }),
-        query('usp_Industry_Manage', { Action: 'GET_ALL', IncludeInactive: 0 }),
-        query('usp_Stat_Manage', { Action: 'GET_ALL', IncludeInactive: 0 }),
-        query('usp_Blog_Manage', { Action: 'GET_ALL', Top: 3 }),
-        query('usp_Testimonial_Manage', { Action: 'GET_ALL', IncludeInactive: 0 }),
-      ]);
-      homeCache = { featured, categories, industries, stats, blogs, testimonials };
-      homeCacheTime = now;
+    if (cache.homeHtml && (now - cache.homeHtmlTime) < HOME_CACHE_TTL) {
+      // Serve pre-rendered HTML directly — 0 DB calls, 0 template render
+      return res.send(cache.homeHtml);
     }
-    res.render('public/index', {
+
+    const [featured, categories, industries, stats, blogs, testimonials] = await Promise.all([
+      query('usp_Product_Manage', { Action: 'GET_ALL', FeaturedOnly: 1, Top: 6 }),
+      query('usp_Category_Manage', { Action: 'GET_ALL', IncludeInactive: 0 }),
+      query('usp_Industry_Manage', { Action: 'GET_ALL', IncludeInactive: 0 }),
+      query('usp_Stat_Manage', { Action: 'GET_ALL', IncludeInactive: 0 }),
+      query('usp_Blog_Manage', { Action: 'GET_ALL', Top: 3 }),
+      query('usp_Testimonial_Manage', { Action: 'GET_ALL', IncludeInactive: 0 }),
+    ]);
+
+    // Render to string, cache it, then send
+    const app = req.app;
+    app.render('public/index', {
+      ...res.locals,
       title: 'INHYMA Solutions LLP — Industrial Packaging & Automation',
       metaDescription: 'INHYMA Solutions LLP is India\'s leading industrial hyper market, providing innovative packaging machinery, material handling equipment, and factory automation systems.',
-      ...homeCache,
+      featured, categories, industries, stats, blogs, testimonials,
+    }, (err, html) => {
+      if (err) return next(err);
+      cache.homeHtml = html;
+      cache.homeHtmlTime = Date.now();
+      res.send(html);
     });
   } catch (err) { next(err); }
 });

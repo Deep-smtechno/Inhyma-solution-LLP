@@ -20,6 +20,16 @@ const ROOT = path.join(__dirname, '..');
 /* ---------- Compression middleware ---------- */
 app.use(compression());
 
+/* ---------- Request timing (visible in server logs) ---------- */
+app.use((req, res, next) => {
+  const start = Date.now();
+  res.on('finish', () => {
+    const ms = Date.now() - start;
+    if (ms > 100) console.log(`⏱ ${req.method} ${req.originalUrl} — ${ms}ms`);
+  });
+  next();
+});
+
 /* ---------- View engine (Nunjucks / Jinja-style) ---------- */
 const env = nunjucks.configure(path.join(ROOT, 'views'), {
   autoescape: true,
@@ -106,5 +116,21 @@ function startServer(port, attempt = 0) {
 }
 
 startServer(PORT);
+
+// Pre-warm DB pool + caches on startup so first request is instant
+(async () => {
+  try {
+    const { getPool } = require('./db');
+    await getPool(); // open connection pool ahead of time
+    const { loadSettings, cache } = require('./utils/helpers');
+    const { query } = require('./db');
+    await loadSettings(); // pre-cache settings
+    cache.navCategories = await query('usp_Category_Manage', { Action: 'GET_ALL', IncludeInactive: 0 });
+    cache.navIndustries = await query('usp_Industry_Manage', { Action: 'GET_ALL', IncludeInactive: 0 });
+    console.log('✓ Caches pre-warmed (settings, categories, industries)');
+  } catch (e) {
+    console.warn('⚠ Cache pre-warm failed (will lazy-load):', e.message);
+  }
+})();
 
 module.exports = app;

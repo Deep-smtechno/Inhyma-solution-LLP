@@ -11,12 +11,16 @@ const cache = {
   settings: null,
   navCategories: null,
   navIndustries: null,
+  homeHtml: null,    // full rendered HTML for home page
+  homeHtmlTime: 0,
 };
 
 function clearCache() {
   cache.settings = null;
   cache.navCategories = null;
   cache.navIndustries = null;
+  cache.homeHtml = null;
+  cache.homeHtmlTime = 0;
 }
 
 // Load all site settings into a flat { key: value } object
