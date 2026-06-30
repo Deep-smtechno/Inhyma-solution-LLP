@@ -627,7 +627,7 @@ router.post('/leads/:id/delete', async (req, res, next) => {
    ============================================================ */
 router.get('/settings', async (req, res, next) => {
   try {
-    const rows = await query('usp_Setting_GetAll');
+    const rows = await query('usp_Setting_Manage', { Action: 'GET_ALL' });
     const groups = {};
     for (const r of rows) { (groups[r.SettingGroup || 'general'] ||= []).push(r); }
     res.render('admin/settings', { title: 'Site Settings', groups });
@@ -646,7 +646,7 @@ router.post('/settings', async (req, res, next) => {
       } else {
         val = val.slice(0, 200);
       }
-      await execProc('usp_Setting_Upsert', { SettingKey: key, SettingValue: { type: sql.NVarChar(sql.MAX), value: val } });
+      await execProc('usp_Setting_Manage', { Action: 'UPSERT', SettingKey: key, SettingValue: { type: sql.NVarChar(sql.MAX), value: val } });
     }
     req.flash('success', 'Settings saved');
     res.redirect('/admin/settings');

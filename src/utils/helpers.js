@@ -8,7 +8,7 @@ function makeSlug(text) {
 
 // Load all site settings into a flat { key: value } object
 async function loadSettings() {
-  const rows = await query('usp_Setting_GetAll');
+  const rows = await query('usp_Setting_Manage', { Action: 'GET_ALL' });
   const map = {};
   for (const r of rows) map[r.SettingKey] = r.SettingValue;
   return map;

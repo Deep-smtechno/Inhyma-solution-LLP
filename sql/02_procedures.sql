@@ -8,6 +8,23 @@
 USE InhymaDB;
 GO
 
+/* Drop all old stored procedures starting with usp_ to ensure clean compile */
+DECLARE @procName NVARCHAR(500)
+DECLARE cur CURSOR FOR
+    SELECT '[' + SCHEMA_NAME(schema_id) + '].[' + name + ']'
+    FROM sys.procedures
+    WHERE name LIKE 'usp_%'
+OPEN cur
+FETCH NEXT FROM cur INTO @procName
+WHILE @@FETCH_STATUS = 0
+BEGIN
+    EXEC('DROP PROCEDURE ' + @procName)
+    FETCH NEXT FROM cur INTO @procName
+END
+CLOSE cur
+DEALLOCATE cur
+GO
+
 /* ============================================================
    USERS
    ============================================================ */
@@ -734,40 +751,38 @@ GO
 /* ============================================================
    SITE SETTINGS
    ============================================================ */
-CREATE OR ALTER PROCEDURE dbo.usp_Setting_GetAll
+CREATE OR ALTER PROCEDURE dbo.usp_Setting_Manage
+    @Action       VARCHAR(20), -- 'GET_ALL', 'GET_BY_KEY', 'UPSERT'
+    @SettingKey   NVARCHAR(120) = NULL,
+    @SettingValue NVARCHAR(MAX) = NULL,
+    @SettingGroup NVARCHAR(60) = NULL,
+    @Label        NVARCHAR(160) = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
-    SELECT SettingId, SettingKey, SettingValue, SettingGroup, Label, UpdatedAt
-    FROM dbo.SiteSettings ORDER BY SettingGroup, SettingKey;
-END
-GO
 
-CREATE OR ALTER PROCEDURE dbo.usp_Setting_GetByKey
-    @SettingKey NVARCHAR(120)
-AS
-BEGIN
-    SET NOCOUNT ON;
-    SELECT SettingId, SettingKey, SettingValue, SettingGroup, Label FROM dbo.SiteSettings WHERE SettingKey = @SettingKey;
-END
-GO
-
-CREATE OR ALTER PROCEDURE dbo.usp_Setting_Upsert
-    @SettingKey NVARCHAR(120), @SettingValue NVARCHAR(MAX) = NULL,
-    @SettingGroup NVARCHAR(60) = NULL, @Label NVARCHAR(160) = NULL
-AS
-BEGIN
-    SET NOCOUNT ON;
-    IF EXISTS (SELECT 1 FROM dbo.SiteSettings WHERE SettingKey = @SettingKey)
-        UPDATE dbo.SiteSettings
-        SET SettingValue = @SettingValue,
-            SettingGroup = COALESCE(@SettingGroup, SettingGroup),
-            Label = COALESCE(@Label, Label),
-            UpdatedAt = SYSUTCDATETIME()
-        WHERE SettingKey = @SettingKey;
-    ELSE
-        INSERT INTO dbo.SiteSettings (SettingKey, SettingValue, SettingGroup, Label, UpdatedAt)
-        VALUES (@SettingKey, @SettingValue, @SettingGroup, @Label, SYSUTCDATETIME());
+    IF @Action = 'GET_ALL'
+    BEGIN
+        SELECT SettingId, SettingKey, SettingValue, SettingGroup, Label, UpdatedAt
+        FROM dbo.SiteSettings ORDER BY SettingGroup, SettingKey;
+    END
+    ELSE IF @Action = 'GET_BY_KEY'
+    BEGIN
+        SELECT SettingId, SettingKey, SettingValue, SettingGroup, Label FROM dbo.SiteSettings WHERE SettingKey = @SettingKey;
+    END
+    ELSE IF @Action = 'UPSERT'
+    BEGIN
+        IF EXISTS (SELECT 1 FROM dbo.SiteSettings WHERE SettingKey = @SettingKey)
+            UPDATE dbo.SiteSettings
+            SET SettingValue = @SettingValue,
+                SettingGroup = COALESCE(@SettingGroup, SettingGroup),
+                Label = COALESCE(@Label, Label),
+                UpdatedAt = SYSUTCDATETIME()
+            WHERE SettingKey = @SettingKey;
+        ELSE
+            INSERT INTO dbo.SiteSettings (SettingKey, SettingValue, SettingGroup, Label, UpdatedAt)
+            VALUES (@SettingKey, @SettingValue, @SettingGroup, @Label, SYSUTCDATETIME());
+    END
 END
 GO
 
