@@ -8,7 +8,8 @@ const { nullIfEmpty } = require('../utils/helpers');
 
 router.get('/products', async (req, res, next) => {
   try {
-    const products = await query('usp_Product_GetAll', {
+    const products = await query('usp_Product_Manage', {
+      Action: 'GET_ALL',
       CategorySlug: nullIfEmpty(req.query.category),
       Search: nullIfEmpty(req.query.q),
       IncludeInactive: 0,
@@ -19,13 +20,13 @@ router.get('/products', async (req, res, next) => {
 
 router.get('/categories', async (req, res, next) => {
   try {
-    res.json({ ok: true, categories: await query('usp_Category_GetAll', { IncludeInactive: 0 }) });
+    res.json({ ok: true, categories: await query('usp_Category_Manage', { Action: 'GET_ALL', IncludeInactive: 0 }) });
   } catch (err) { next(err); }
 });
 
 router.get('/industries', async (req, res, next) => {
   try {
-    res.json({ ok: true, industries: await query('usp_Industry_GetAll', { IncludeInactive: 0 }) });
+    res.json({ ok: true, industries: await query('usp_Industry_Manage', { Action: 'GET_ALL', IncludeInactive: 0 }) });
   } catch (err) { next(err); }
 });
 

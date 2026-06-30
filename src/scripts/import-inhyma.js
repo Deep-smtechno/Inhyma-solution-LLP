@@ -41,14 +41,15 @@ function download(url, dest) {
 }
 
 async function ensureCategories(categoryNames) {
-  const existing = await query('usp_Category_GetAll', { IncludeInactive: 1 });
+  const existing = await query('usp_Category_Manage', { Action: 'GET_ALL', IncludeInactive: 1 });
   const bySlug = new Map(existing.map((c) => [c.Slug, c.CategoryId]));
   const map = new Map(); // name -> categoryId
   let order = 1;
   for (const name of categoryNames) {
     const slug = makeSlug(name);
     if (bySlug.has(slug)) { map.set(name, bySlug.get(slug)); continue; }
-    const r = await execProc('usp_Category_Create', {
+    const r = await execProc('usp_Category_Manage', {
+      Action: 'CREATE',
       Name: name, Slug: slug, Description: { type: sql.NVarChar(500), value: null },
       ImagePath: { type: sql.NVarChar(400), value: null }, DisplayOrder: order++, IsActive: 1,
     });
@@ -60,10 +61,10 @@ async function ensureCategories(categoryNames) {
 
 async function wipe() {
   console.log('--fresh: removing existing products & categories...');
-  const prods = await query('usp_Product_GetAll', { IncludeInactive: 1 });
-  for (const p of prods) await execProc('usp_Product_Delete', { ProductId: p.ProductId });
-  const cats = await query('usp_Category_GetAll', { IncludeInactive: 1 });
-  for (const c of cats) await execProc('usp_Category_Delete', { CategoryId: c.CategoryId });
+  const prods = await query('usp_Product_Manage', { Action: 'GET_ALL', IncludeInactive: 1 });
+  for (const p of prods) await execProc('usp_Product_Manage', { Action: 'DELETE', ProductId: p.ProductId });
+  const cats = await query('usp_Category_Manage', { Action: 'GET_ALL', IncludeInactive: 1 });
+  for (const c of cats) await execProc('usp_Category_Manage', { Action: 'DELETE', CategoryId: c.CategoryId });
   // remove downloaded image files
   if (fs.existsSync(UPLOAD_DIR)) for (const f of fs.readdirSync(UPLOAD_DIR)) fs.unlinkSync(path.join(UPLOAD_DIR, f));
 }
@@ -80,7 +81,7 @@ async function wipe() {
     const catMap = await ensureCategories(data.categories);
 
     // existing slugs to skip
-    const existingProducts = await query('usp_Product_GetAll', { IncludeInactive: 1 });
+    const existingProducts = await query('usp_Product_Manage', { Action: 'GET_ALL', IncludeInactive: 1 });
     const existingSlugs = new Set(existingProducts.map((p) => p.Slug));
     const usedSlugs = new Set(existingSlugs);
 
@@ -93,12 +94,13 @@ async function wipe() {
       let s = slug, n = 2; while (usedSlugs.has(s)) s = `${slug}-${n++}`; slug = s; usedSlugs.add(slug);
 
       const categoryId = catMap.get(p.category) || null;
-      const r = await execProc('usp_Product_Create', {
+      const r = await execProc('usp_Product_Manage', {
+        Action: 'CREATE',
         CategoryId: categoryId ? categoryId : { type: sql.Int, value: null },
         Name: p.name, Slug: slug, CategoryLabel: p.category,
         ShortDescription: { type: sql.NVarChar(600), value: (p.shortDescription || '').slice(0, 600) },
         Description: { type: sql.NVarChar(sql.MAX), value: p.description || null },
-        Badge: { type: sql.NVarChar(60), value: p.modelNo && p.modelNo !== p.name ? p.modelNo : null },
+        Badge: { type: sql.NVarChar(60), value: p.modelNo && p.modelNo !== p.name ? String(p.modelNo).slice(0, 60) : null },
         // feature the first few so the homepage isn't empty right after import
         IsFeatured: (p.displayOrder && p.displayOrder <= 8) ? 1 : 0,
         IsActive: 1, DisplayOrder: p.displayOrder || 0,
@@ -109,7 +111,8 @@ async function wipe() {
       // specs
       for (let i = 0; i < (p.specs || []).length; i++) {
         const sp = p.specs[i];
-        await execProc('usp_ProductSpec_Create', {
+        await execProc('usp_Product_Manage', {
+          Action: 'CREATE_SPEC',
           ProductId: productId, SpecName: sp.name.slice(0, 160), SpecValue: sp.value.slice(0, 400), DisplayOrder: i,
         });
       }
@@ -122,7 +125,8 @@ async function wipe() {
         const dest = path.join(UPLOAD_DIR, filename);
         try {
           await download(url, dest);
-          await execProc('usp_ProductImage_Create', {
+          await execProc('usp_Product_Manage', {
+            Action: 'CREATE_IMAGE',
             ProductId: productId, FilePath: `/uploads/products/${filename}`,
             FileName: filename, AltText: { type: sql.NVarChar(200), value: p.name.slice(0, 200) },
             IsPrimary: i === 0 ? 1 : 0, DisplayOrder: i,

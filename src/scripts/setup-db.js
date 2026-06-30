@@ -39,7 +39,7 @@ async function runFile(pool, file) {
 }
 
 async function seedAdmin() {
-  const countRow = await queryOne('usp_User_Count');
+  const countRow = await queryOne('usp_User_Manage', { Action: 'COUNT' });
   if (countRow && countRow.Cnt > 0) {
     console.log('\nAdmin user already exists — skipping admin seed.');
     return;
@@ -49,7 +49,8 @@ async function seedAdmin() {
   const password = process.env.SEED_ADMIN_PASSWORD || 'Admin@123';
   const hash = await bcrypt.hash(password, 10);
 
-  await execProc('usp_User_Create', {
+  await execProc('usp_User_Manage', {
+    Action: 'CREATE',
     Username: username,
     Email: email,
     PasswordHash: hash,

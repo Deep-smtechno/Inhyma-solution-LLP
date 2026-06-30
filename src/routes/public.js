@@ -10,8 +10,8 @@ const { loadSettings, nullIfEmpty } = require('../utils/helpers');
 router.use(async (req, res, next) => {
   try {
     res.locals.settings = await loadSettings();
-    res.locals.navCategories = await query('usp_Category_GetAll', { IncludeInactive: 0 });
-    res.locals.navIndustries = await query('usp_Industry_GetAll', { IncludeInactive: 0 });
+    res.locals.navCategories = await query('usp_Category_Manage', { Action: 'GET_ALL', IncludeInactive: 0 });
+    res.locals.navIndustries = await query('usp_Industry_Manage', { Action: 'GET_ALL', IncludeInactive: 0 });
     res.locals.activePath = req.path;
     next();
   } catch (err) { next(err); }
@@ -21,12 +21,12 @@ router.use(async (req, res, next) => {
 router.get('/', async (req, res, next) => {
   try {
     const [featured, categories, industries, stats, blogs, testimonials] = await Promise.all([
-      query('usp_Product_GetAll', { FeaturedOnly: 1, Top: 6 }),
-      query('usp_Category_GetAll', { IncludeInactive: 0 }),
-      query('usp_Industry_GetAll', { IncludeInactive: 0 }),
-      query('usp_Stat_GetAll', { IncludeInactive: 0 }),
+      query('usp_Product_Manage', { Action: 'GET_ALL', FeaturedOnly: 1, Top: 6 }),
+      query('usp_Category_Manage', { Action: 'GET_ALL', IncludeInactive: 0 }),
+      query('usp_Industry_Manage', { Action: 'GET_ALL', IncludeInactive: 0 }),
+      query('usp_Stat_Manage', { Action: 'GET_ALL', IncludeInactive: 0 }),
       query('usp_Blog_Manage', { Action: 'GET_ALL', Top: 3 }),
-      query('usp_Testimonial_GetAll', { IncludeInactive: 0 }),
+      query('usp_Testimonial_Manage', { Action: 'GET_ALL', IncludeInactive: 0 }),
     ]);
     res.render('public/index', {
       title: 'INHYMA Solutions LLP — Industrial Packaging & Automation',
@@ -50,8 +50,8 @@ router.get('/products', async (req, res, next) => {
     const limit = 12;
 
     const [allProducts, categories] = await Promise.all([
-      query('usp_Product_GetAll', { CategorySlug: categorySlug, Search: search, IncludeInactive: 0 }),
-      query('usp_Category_GetAll', { IncludeInactive: 0 }),
+      query('usp_Product_Manage', { Action: 'GET_ALL', CategorySlug: categorySlug, Search: search, IncludeInactive: 0 }),
+      query('usp_Category_Manage', { Action: 'GET_ALL', IncludeInactive: 0 }),
     ]);
 
     const totalProducts = allProducts.length;
@@ -76,7 +76,7 @@ router.get('/products', async (req, res, next) => {
 
 router.get('/products/:slug', async (req, res, next) => {
   try {
-    const result = await execProc('usp_Product_GetBySlug', { Slug: req.params.slug });
+    const result = await execProc('usp_Product_Manage', { Action: 'GET_BY_SLUG', Slug: req.params.slug });
     const product = result.recordsets[0] && result.recordsets[0][0];
     if (!product) return res.status(404).render('public/404', { title: 'Product Not Found' });
     const data = {
@@ -86,7 +86,7 @@ router.get('/products/:slug', async (req, res, next) => {
       applications: result.recordsets[3] || [],
       images: result.recordsets[4] || [],
     };
-    const related = await query('usp_Product_GetRelated', { ProductId: product.ProductId, Top: 3 });
+    const related = await query('usp_Product_Manage', { Action: 'GET_RELATED', ProductId: product.ProductId, Top: 3 });
     res.render('public/product-detail', {
       title: product.Name + ' | Packaging Machinery',
       metaDescription: product.ShortDescription ? product.ShortDescription.slice(0, 160) : `Learn details, technical specifications, and key features of ${product.Name} from INHYMA Solutions LLP.`,
@@ -98,7 +98,7 @@ router.get('/products/:slug', async (req, res, next) => {
 
 router.get('/industries', async (req, res, next) => {
   try {
-    const industries = await query('usp_Industry_GetAll', { IncludeInactive: 0 });
+    const industries = await query('usp_Industry_Manage', { Action: 'GET_ALL', IncludeInactive: 0 });
     res.render('public/industries', {
       title: 'Industrial Verticals & Sectors Served',
       metaDescription: 'Tailored packaging and factory automation solutions for Food Processing, Pharmaceutical, Cosmetics, FMCG, Chemical, Logistics, and Manufacturing industries.',
@@ -109,7 +109,7 @@ router.get('/industries', async (req, res, next) => {
 
 router.get('/industries/:slug', async (req, res, next) => {
   try {
-    const result = await execProc('usp_Industry_GetBySlug', { Slug: req.params.slug });
+    const result = await execProc('usp_Industry_Manage', { Action: 'GET_BY_SLUG', Slug: req.params.slug });
     const industry = result.recordsets[0] && result.recordsets[0][0];
     if (!industry) return res.status(404).render('public/404', { title: 'Industry Not Found' });
     const tags = result.recordsets[1] || [];
@@ -125,7 +125,7 @@ router.get('/industries/:slug', async (req, res, next) => {
 /* ---------------- Solutions ---------------- */
 router.get('/solutions', async (req, res, next) => {
   try {
-    const result = await execProc('usp_Solution_GetAll', { IncludeInactive: 0 });
+    const result = await execProc('usp_Solution_Manage', { Action: 'GET_ALL', IncludeInactive: 0 });
     const solutions = result.recordsets[0] || [];
     const features = result.recordsets[1] || [];
     
@@ -146,9 +146,9 @@ router.get('/solutions', async (req, res, next) => {
 router.get('/about', async (req, res, next) => {
   try {
     const [team, values, stats] = await Promise.all([
-      query('usp_Team_GetAll', { IncludeInactive: 0 }),
-      query('usp_Value_GetAll', { IncludeInactive: 0 }),
-      query('usp_Stat_GetAll', { IncludeInactive: 0 }),
+      query('usp_Team_Manage', { Action: 'GET_ALL', IncludeInactive: 0 }),
+      query('usp_Value_Manage', { Action: 'GET_ALL', IncludeInactive: 0 }),
+      query('usp_Stat_Manage', { Action: 'GET_ALL', IncludeInactive: 0 }),
     ]);
     res.render('public/about', {
       title: 'About Us — INHYMA Solutions LLP',
@@ -204,7 +204,8 @@ const sliceString = (val, maxLen) => {
 router.post('/contact', async (req, res, next) => {
   try {
     const b = req.body;
-    await execProc('usp_Lead_Create', {
+    await execProc('usp_Lead_Manage', {
+      Action: 'CREATE',
       Name: sliceString(b.name, 160) || 'Anonymous',
       Company: sliceString(b.company, 200),
       Mobile: sliceString(b.mobile, 40),
@@ -220,7 +221,7 @@ router.post('/contact', async (req, res, next) => {
 /* ---------------- Request Quote ---------------- */
 router.get('/request-quote', async (req, res, next) => {
   try {
-    const categories = await query('usp_Category_GetAll', { IncludeInactive: 0 });
+    const categories = await query('usp_Category_Manage', { Action: 'GET_ALL', IncludeInactive: 0 });
     res.render('public/request-quote', {
       title: 'Request a Free Quote | INHYMA Solutions',
       metaDescription: 'Request a customized quotation for your industrial packaging machinery, conveyor systems, filling machines, or warehouse automation needs.',
@@ -234,7 +235,8 @@ router.get('/request-quote', async (req, res, next) => {
 router.post('/request-quote', async (req, res, next) => {
   try {
     const b = req.body;
-    await execProc('usp_Lead_Create', {
+    await execProc('usp_Lead_Manage', {
+      Action: 'CREATE',
       Name: sliceString(b.name, 160) || 'Anonymous',
       Company: sliceString(b.company, 200),
       Mobile: sliceString(b.mobile, 40),
@@ -254,7 +256,8 @@ router.post('/request-quote', async (req, res, next) => {
 router.post('/industry-inquiry', async (req, res, next) => {
   try {
     const b = req.body;
-    await execProc('usp_Lead_Create', {
+    await execProc('usp_Lead_Manage', {
+      Action: 'CREATE',
       Name: sliceString(b.name, 160) || 'Anonymous',
       Company: sliceString(b.company, 200),
       Mobile: sliceString(b.mobile, 40),
@@ -274,10 +277,10 @@ router.get('/sitemap.xml', async (req, res, next) => {
     
     // Fetch all dynamic slugs
     const [products, categories, industries, solutions, blogs] = await Promise.all([
-      query('usp_Product_GetAll', { IncludeInactive: 0 }),
-      query('usp_Category_GetAll', { IncludeInactive: 0 }),
-      query('usp_Industry_GetAll', { IncludeInactive: 0 }),
-      query('usp_Solution_GetAll', { IncludeInactive: 0 }),
+      query('usp_Product_Manage', { Action: 'GET_ALL', IncludeInactive: 0 }),
+      query('usp_Category_Manage', { Action: 'GET_ALL', IncludeInactive: 0 }),
+      query('usp_Industry_Manage', { Action: 'GET_ALL', IncludeInactive: 0 }),
+      query('usp_Solution_Manage', { Action: 'GET_ALL', IncludeInactive: 0 }),
       query('usp_Blog_Manage', { Action: 'GET_ALL' }),
     ]);
 
