@@ -4,14 +4,22 @@
 const express = require('express');
 const router = express.Router();
 const { query, queryOne, execProc } = require('../db');
-const { loadSettings, nullIfEmpty } = require('../utils/helpers');
+const { loadSettings, nullIfEmpty, cache } = require('../utils/helpers');
 
 // Load settings + footer nav for every public page
 router.use(async (req, res, next) => {
   try {
     res.locals.settings = await loadSettings();
-    res.locals.navCategories = await query('usp_Category_Manage', { Action: 'GET_ALL', IncludeInactive: 0 });
-    res.locals.navIndustries = await query('usp_Industry_Manage', { Action: 'GET_ALL', IncludeInactive: 0 });
+    if (!cache.navCategories) {
+      cache.navCategories = await query('usp_Category_Manage', { Action: 'GET_ALL', IncludeInactive: 0 });
+    }
+    res.locals.navCategories = cache.navCategories;
+
+    if (!cache.navIndustries) {
+      cache.navIndustries = await query('usp_Industry_Manage', { Action: 'GET_ALL', IncludeInactive: 0 });
+    }
+    res.locals.navIndustries = cache.navIndustries;
+
     res.locals.activePath = req.path;
     next();
   } catch (err) { next(err); }

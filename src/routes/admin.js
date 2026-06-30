@@ -8,7 +8,7 @@ const bcrypt = require('bcryptjs');
 const { sql, query, queryOne, execProc } = require('../db');
 const { requireAuth } = require('../middleware/auth');
 const { uploader, webPath, removeByWebPath } = require('../utils/upload');
-const { makeSlug, asArray, toBit, toInt, nullIfEmpty, loadSettings } = require('../utils/helpers');
+const { makeSlug, asArray, toBit, toInt, nullIfEmpty, loadSettings, clearCache } = require('../utils/helpers');
 
 /* ============================================================
    AUTH
@@ -90,6 +90,7 @@ router.post('/categories/:id?', uploader('categories').single('image'), async (r
       await execProc('usp_Category_Manage', { Action: 'CREATE', ...params });
       req.flash('success', 'Category created');
     }
+    clearCache();
     res.redirect('/admin/categories');
   } catch (err) { next(err); }
 });
@@ -98,6 +99,7 @@ router.post('/categories/:id/delete', async (req, res, next) => {
   try {
     await execProc('usp_Category_Manage', { Action: 'DELETE', CategoryId: toInt(req.params.id) });
     req.flash('success', 'Category deleted');
+    clearCache();
     res.redirect('/admin/categories');
   } catch (err) { next(err); }
 });
@@ -289,6 +291,7 @@ router.post('/industries/:id?', uploader('industries').single('image'), async (r
       await execProc('usp_Industry_Manage', { Action: 'CREATE_TAG', IndustryId: industryId, TagText: tags[i], DisplayOrder: i });
 
     req.flash('success', id ? 'Industry updated' : 'Industry created');
+    clearCache();
     res.redirect('/admin/industries');
   } catch (err) { next(err); }
 });
@@ -297,6 +300,7 @@ router.post('/industries/:id/delete', async (req, res, next) => {
   try {
     await execProc('usp_Industry_Manage', { Action: 'DELETE', IndustryId: toInt(req.params.id) });
     req.flash('success', 'Industry deleted');
+    clearCache();
     res.redirect('/admin/industries');
   } catch (err) { next(err); }
 });
@@ -648,6 +652,7 @@ router.post('/settings', async (req, res, next) => {
       }
       await execProc('usp_Setting_Manage', { Action: 'UPSERT', SettingKey: key, SettingValue: { type: sql.NVarChar(sql.MAX), value: val } });
     }
+    clearCache();
     req.flash('success', 'Settings saved');
     res.redirect('/admin/settings');
   } catch (err) { next(err); }

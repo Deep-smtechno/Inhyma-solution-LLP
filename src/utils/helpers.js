@@ -6,11 +6,26 @@ function makeSlug(text) {
   return slugify(String(text || ''), { lower: true, strict: true, trim: true });
 }
 
+// In-memory cache for static/semi-static lists
+const cache = {
+  settings: null,
+  navCategories: null,
+  navIndustries: null,
+};
+
+function clearCache() {
+  cache.settings = null;
+  cache.navCategories = null;
+  cache.navIndustries = null;
+}
+
 // Load all site settings into a flat { key: value } object
 async function loadSettings() {
+  if (cache.settings) return cache.settings;
   const rows = await query('usp_Setting_Manage', { Action: 'GET_ALL' });
   const map = {};
   for (const r of rows) map[r.SettingKey] = r.SettingValue;
+  cache.settings = map;
   return map;
 }
 
@@ -37,4 +52,4 @@ function nullIfEmpty(v) {
   return s === '' ? null : s;
 }
 
-module.exports = { sql, makeSlug, loadSettings, asArray, toBit, toInt, nullIfEmpty };
+module.exports = { sql, makeSlug, loadSettings, asArray, toBit, toInt, nullIfEmpty, cache, clearCache };
