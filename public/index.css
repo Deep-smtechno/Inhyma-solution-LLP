@@ -3059,6 +3059,15 @@ p {
   font-size: 1.5rem;
 }
 
+.contact-info-card__text {
+  min-width: 0;
+}
+
+.contact-info-card__text p {
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
 .contact-info-card__icon--blue {
   background: var(--color-blue-tint);
   color: var(--color-blue);
