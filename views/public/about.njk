@@ -15,7 +15,7 @@
 <section class="section section--alt">
   <div class="container">
     <div class="section-header text-center"><span class="section-label">What Drives Us</span><h2 class="section-title">Our Core Values</h2></div>
-    <div class="value-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:var(--space-6);margin-top:var(--space-8);">
+    <div class="value-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(150px, 100%), 1fr));gap:var(--space-6);margin-top:var(--space-8);">
       {% for v in values %}
       <div class="value-card reveal text-center" style="padding:var(--space-6);border:1px solid var(--color-gray-100);border-radius:var(--radius-lg);">
         <div class="value-card__icon" style="font-size:2.2rem;">{{ v.Icon }}</div>
@@ -31,7 +31,7 @@
 {% if stats.length %}
 <section class="section section--primary">
   <div class="container">
-    <div class="stats-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:var(--space-8);">
+    <div class="stats-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(180px, 100%), 1fr));gap:var(--space-8);">
       {% for s in stats %}
       <div class="stat-card reveal text-center">
         <div class="stat-card__value" style="color:var(--color-white);"><span data-count="{{ s.Value }}" class="counter">0</span><span>{{ s.Suffix }}</span></div>
@@ -47,7 +47,7 @@
 <section class="section">
   <div class="container">
     <div class="section-header text-center"><span class="section-label">Our People</span><h2 class="section-title">Leadership Team</h2></div>
-    <div class="team-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:var(--space-6);margin-top:var(--space-8);">
+    <div class="team-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(200px, 100%), 1fr));gap:var(--space-6);margin-top:var(--space-8);">
       {% for m in team %}
       <div class="team-card reveal text-center">
         {% if m.ImagePath %}<img src="{{ m.ImagePath }}" alt="{{ m.Name }}" class="team-card__avatar" style="width:96px;height:96px;border-radius:50%;object-fit:cover;margin:0 auto;">

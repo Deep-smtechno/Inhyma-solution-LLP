@@ -20,6 +20,11 @@ router.use(async (req, res, next) => {
     }
     res.locals.navIndustries = cache.navIndustries;
 
+    if (!cache.navProducts) {
+      cache.navProducts = await query('usp_Product_Manage', { Action: 'GET_ALL', IncludeInactive: 0 });
+    }
+    res.locals.navProducts = cache.navProducts;
+
     res.locals.activePath = req.path;
     next();
   } catch (err) { next(err); }
@@ -36,13 +41,14 @@ router.get('/', async (req, res, next) => {
       return res.send(cache.homeHtml);
     }
 
-    const [featured, categories, industries, stats, blogs, testimonials] = await Promise.all([
+    const [featured, categories, industries, stats, blogs, testimonials, clientLogos] = await Promise.all([
       query('usp_Product_Manage', { Action: 'GET_ALL', FeaturedOnly: 1, Top: 6 }),
       query('usp_Category_Manage', { Action: 'GET_ALL', IncludeInactive: 0 }),
       query('usp_Industry_Manage', { Action: 'GET_ALL', IncludeInactive: 0 }),
       query('usp_Stat_Manage', { Action: 'GET_ALL', IncludeInactive: 0 }),
       query('usp_Blog_Manage', { Action: 'GET_ALL', Top: 3 }),
       query('usp_Testimonial_Manage', { Action: 'GET_ALL', IncludeInactive: 0 }),
+      query('usp_ClientLogo_Manage', { Action: 'GET_ALL', IncludeInactive: 0 }),
     ]);
 
     // Render to string, cache it, then send
@@ -51,7 +57,7 @@ router.get('/', async (req, res, next) => {
       ...res.locals,
       title: 'INHYMA Solutions LLP — Industrial Packaging & Automation',
       metaDescription: 'INHYMA Solutions LLP is India\'s leading industrial hyper market, providing innovative packaging machinery, material handling equipment, and factory automation systems.',
-      featured, categories, industries, stats, blogs, testimonials,
+      featured, categories, industries, stats, blogs, testimonials, clientLogos,
     }, (err, html) => {
       if (err) return next(err);
       cache.homeHtml = html;

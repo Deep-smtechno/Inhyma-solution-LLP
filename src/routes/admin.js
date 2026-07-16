@@ -82,6 +82,7 @@ router.post('/categories/:id?', uploader('categories').single('image'), async (r
       Name: b.name, Slug: nullIfEmpty(b.slug) || makeSlug(b.name),
       Description: nullIfEmpty(b.description), ImagePath: imagePath,
       DisplayOrder: toInt(b.displayOrder), IsActive: toBit(b.isActive),
+      ShowOnHome: toBit(b.showOnHome)
     };
     if (id) {
       await execProc('usp_Category_Manage', { Action: 'UPDATE', CategoryId: id, ...params });
@@ -491,6 +492,58 @@ router.post('/testimonials/:id/delete', async (req, res, next) => {
     res.redirect('/admin/testimonials');
   } catch (err) { next(err); }
 });
+
+/* ============================================================
+   CLIENT LOGOS
+   ============================================================ */
+router.get('/client-logos', async (req, res, next) => {
+  try {
+    res.render('admin/client-logos/list', { title: 'Client Logos', items: await query('usp_ClientLogo_Manage', { Action: 'GET_ALL', IncludeInactive: 1 }) });
+  } catch (err) { next(err); }
+});
+router.get('/client-logos/new', (req, res) => res.render('admin/client-logos/form', { title: 'New Client Logo', item: null }));
+router.get('/client-logos/:id/edit', async (req, res, next) => {
+  try {
+    const item = (await query('usp_ClientLogo_Manage', { Action: 'GET_BY_ID', LogoId: toInt(req.params.id) }))[0];
+    if (!item) { req.flash('error', 'Logo not found'); return res.redirect('/admin/client-logos'); }
+    res.render('admin/client-logos/form', { title: 'Edit Client Logo', item });
+  } catch (err) { next(err); }
+});
+router.post('/client-logos/:id?', uploader('logos').single('image'), async (req, res, next) => {
+  try {
+    const b = req.body;
+    let imagePath = req.file ? webPath('logos', req.file.filename) : b.currentImage;
+    if (b.removeImage === '1') { if (b.currentImage) removeByWebPath(b.currentImage); imagePath = null; }
+    
+    if (!imagePath) {
+      req.flash('error', 'A logo image is required.');
+      return res.redirect(req.params.id ? `/admin/client-logos/${req.params.id}/edit` : '/admin/client-logos/new');
+    }
+
+    const params = {
+      Name: b.name, ImagePath: imagePath,
+      DisplayOrder: toInt(b.displayOrder), IsActive: toBit(b.isActive)
+    };
+    if (req.params.id) {
+      await execProc('usp_ClientLogo_Manage', { Action: 'UPDATE', LogoId: toInt(req.params.id), ...params });
+      req.flash('success', 'Logo updated');
+    } else {
+      await execProc('usp_ClientLogo_Manage', { Action: 'CREATE', ...params });
+      req.flash('success', 'Logo added');
+    }
+    clearCache();
+    res.redirect('/admin/client-logos');
+  } catch (err) { next(err); }
+});
+router.post('/client-logos/:id/delete', async (req, res, next) => {
+  try {
+    await execProc('usp_ClientLogo_Manage', { Action: 'DELETE', LogoId: toInt(req.params.id) });
+    req.flash('success', 'Logo deleted');
+    clearCache();
+    res.redirect('/admin/client-logos');
+  } catch (err) { next(err); }
+});
+
 
 /* ============================================================
    CORE VALUES

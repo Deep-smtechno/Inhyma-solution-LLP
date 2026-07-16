@@ -1,12 +1,16 @@
 {% macro banner(title, subtitle, crumbs=[]) %}
-<section class="page-banner"><div class="container"><div class="page-banner__content">
-  <nav class="breadcrumb">
-    <a href="/">Home</a>
-    {% for c in crumbs %}<span class="breadcrumb__sep">/</span>{% if c.url %}<a href="{{ c.url }}">{{ c.label }}</a>{% else %}<span class="breadcrumb__current">{{ c.label }}</span>{% endif %}{% endfor %}
-  </nav>
-  <h1 class="page-banner__title">{{ title }}</h1>
-  {% if subtitle %}<p class="page-banner__subtitle">{{ subtitle }}</p>{% endif %}
-</div></div></section>
+<section class="page-banner">
+  <div class="container">
+    <div class="page-banner__content">
+      <nav class="breadcrumb">
+        <a href="/">Home</a>
+        {% for c in crumbs %}<span class="breadcrumb__sep">/</span>{% if c.url %}<a href="{{ c.url }}">{{ c.label }}</a>{% else %}<span class="breadcrumb__current">{{ c.label }}</span>{% endif %}{% endfor %}
+      </nav>
+      <h1 class="page-banner__title">{{ title }}</h1>
+      {% if subtitle %}<p class="page-banner__subtitle">{{ subtitle }}</p>{% endif %}
+    </div>
+  </div>
+</section>
 {% endmacro %}
 
 {% macro productCard(p) %}

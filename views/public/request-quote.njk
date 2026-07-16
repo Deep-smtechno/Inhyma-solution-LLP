@@ -11,11 +11,11 @@
       <p class="lead-form__subtitle">Complete the form and we'll prepare a detailed quotation.</p>
       {% if sent %}<div class="alert" style="background:var(--color-success,#1ea97c);color:#fff;padding:var(--space-4);border-radius:var(--radius);margin-bottom:var(--space-4);">✓ Thank you! Your request has been received.</div>{% endif %}
       <form method="post" action="/request-quote">
-        <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-4);">
+        <div class="form-row">
           <div class="form-group"><label class="form-label">Full Name *</label><input class="form-input" name="name" required maxlength="160"></div>
           <div class="form-group"><label class="form-label">Company</label><input class="form-input" name="company" maxlength="200"></div>
         </div>
-        <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-4);">
+        <div class="form-row">
           <div class="form-group"><label class="form-label">Mobile *</label><input class="form-input" name="mobile" required maxlength="40"></div>
           <div class="form-group"><label class="form-label">Email *</label><input type="email" class="form-input" name="email" required maxlength="160"></div>
         </div>
@@ -35,7 +35,7 @@
             <option>Custom Solution</option>
           </select>
         </div>
-        <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-4);">
+        <div class="form-row">
           <div class="form-group"><label class="form-label">Quantity</label><input class="form-input" name="quantity" placeholder="e.g., 2 units" maxlength="80"></div>
           <div class="form-group"><label class="form-label">Budget Range</label>
             <select class="form-select" name="budget">

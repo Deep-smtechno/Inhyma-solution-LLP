@@ -1,0 +1,34 @@
+{% extends "admin/layout.njk" %}
+{% from "admin/_macros.njk" import listTop, delBtn, activePill %}
+{% block content %}
+<div class="card">
+  {{ listTop('Client Logos', '/admin/client-logos/new', 'Add Logo') }}
+  {% if items.length %}
+  <div class="table-wrap"><table class="data">
+    <thead><tr><th>Image</th><th>Name</th><th>Order</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+      {% for c in items %}
+      <tr>
+        <td>
+          {% if c.ImagePath %}
+            <img src="{{ c.ImagePath }}" alt="{{ c.Name }}" style="max-height: 40px; max-width: 100px; object-fit: contain;">
+          {% else %}
+            <span class="text-muted">No Image</span>
+          {% endif %}
+        </td>
+        <td><strong>{{ c.Name }}</strong></td>
+        <td>{{ c.DisplayOrder }}</td>
+        <td>{{ activePill(c.IsActive) }}</td>
+        <td class="text-right">
+          <a class="btn btn-sm" href="/admin/client-logos/{{ c.LogoId }}/edit">Edit</a>
+          {{ delBtn('/admin/client-logos/' ~ c.LogoId ~ '/delete', 'logo') }}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table></div>
+  {% else %}
+  <div class="empty">No client logos found.</div>
+  {% endif %}
+</div>
+{% endblock %}

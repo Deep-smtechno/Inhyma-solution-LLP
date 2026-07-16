@@ -1,0 +1,19 @@
+{% extends "admin/layout.njk" %}
+{% from "admin/_macros.njk" import imageField, toggle %}
+
+{% block content %}
+<div class="card">
+  <div class="card__header"><h2>{{ 'Edit' if item else 'New' }} Client Logo</h2><a class="btn btn-ghost btn-sm" href="/admin/client-logos">← Back</a></div>
+  <div class="card__body">
+    <form method="post" action="/admin/client-logos{% if item %}/{{ item.LogoId }}{% endif %}" enctype="multipart/form-data">
+      <div class="form-grid">
+        <div class="fg"><label>Name *</label><input type="text" name="name" required value="{{ item.Name }}"></div>
+        {{ imageField('Logo Image', item.ImagePath if item) }}
+        <div class="fg"><label>Display Order</label><input type="number" name="displayOrder" value="{{ item.DisplayOrder or 0 }}"></div>
+        <div class="fg"><label>Status</label>{{ toggle('isActive', 'Active (visible on site)', (not item) or item.IsActive) }}</div>
+      </div>
+      <div class="form-actions"><button class="btn btn-primary" type="submit">Save Logo</button><a class="btn btn-outline" href="/admin/client-logos">Cancel</a></div>
+    </form>
+  </div>
+</div>
+{% endblock %}

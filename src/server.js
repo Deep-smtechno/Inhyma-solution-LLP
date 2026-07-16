@@ -100,8 +100,21 @@ const MAX_PORT_TRIES = 10;
 
 function startServer(port, attempt = 0) {
   const server = app.listen(port, () => {
-    console.log(`\n🚀 INHYMA site running:  http://localhost:${port}`);
-    console.log(`🔐 Admin panel:         http://localhost:${port}/admin\n`);
+    const os = require('os');
+    const nets = os.networkInterfaces();
+    let networkIp = 'localhost';
+    for (const name of Object.keys(nets)) {
+      for (const net of nets[name]) {
+        if (net.family === 'IPv4' && !net.internal) {
+          networkIp = net.address;
+        }
+      }
+    }
+    
+    console.log(`\n🚀 INHYMA site running:`);
+    console.log(`   - Local:    http://localhost:${port}`);
+    console.log(`   - Network:  http://${networkIp}:${port}`);
+    console.log(`🔐 Admin panel:   http://localhost:${port}/admin\n`);
   });
   server.on('error', (err) => {
     if (err.code === 'EADDRINUSE' && attempt < MAX_PORT_TRIES) {

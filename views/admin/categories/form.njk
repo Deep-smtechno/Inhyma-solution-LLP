@@ -12,6 +12,7 @@
         {{ imageField('Category Image', item.ImagePath if item) }}
         <div class="fg"><label>Display Order</label><input type="number" name="displayOrder" value="{{ item.DisplayOrder or 0 }}"></div>
         <div class="fg"><label>Status</label>{{ toggle('isActive', 'Active (visible on site)', (not item) or item.IsActive) }}</div>
+        <div class="fg"><label>Home Page</label>{{ toggle('showOnHome', 'Show on Home Page', (not item) or item.ShowOnHome) }}</div>
       </div>
       <div class="form-actions"><button class="btn btn-primary" type="submit">Save Category</button><a class="btn btn-outline" href="/admin/categories">Cancel</a></div>
     </form>

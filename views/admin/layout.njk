@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{{ title }} — INHYMA Admin</title>
   <link rel="icon" type="image/png" href="/logo.png">
-  <link rel="stylesheet" href="/admin.css?v=1.0.2">
+  <link rel="stylesheet" href="/admin.css?v=1.0.3">
 </head>
 <body class="admin">
 <div class="admin-shell">
@@ -24,9 +24,10 @@
 
       <div class="sidebar__section">Content</div>
       <a href="/admin/industries" class="sidebar__link {{ 'active' if '/admin/industries' in activePath }}">{{ icon('industries') }} Industries</a>
-      <a href="/admin/solutions" class="sidebar__link {{ 'active' if '/admin/solutions' in activePath }}">{{ icon('solutions') }} Solutions</a>
+
       <a href="/admin/blog" class="sidebar__link {{ 'active' if '/admin/blog' in activePath }}">{{ icon('blog') }} Blog</a>
       <a href="/admin/testimonials" class="sidebar__link {{ 'active' if '/admin/testimonials' in activePath }}">{{ icon('testimonials') }} Testimonials</a>
+      <a href="/admin/client-logos" class="sidebar__link {{ 'active' if '/admin/client-logos' in activePath }}">{{ icon('media') }} Client Logos</a>
 
       <div class="sidebar__section">About Page</div>
       <a href="/admin/team" class="sidebar__link {{ 'active' if '/admin/team' in activePath }}">{{ icon('team') }} Team</a>

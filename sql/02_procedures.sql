@@ -85,6 +85,7 @@ CREATE OR ALTER PROCEDURE dbo.usp_Category_Manage
     @ImagePath       NVARCHAR(400) = NULL,
     @DisplayOrder    INT = 0,
     @IsActive        BIT = 1,
+    @ShowOnHome      BIT = 1,
     @IncludeInactive BIT = 1
 AS
 BEGIN
@@ -100,7 +101,7 @@ BEGIN
                    WHERE p.CategoryId = c.CategoryId AND p.IsActive = 1
                    ORDER BY p.IsFeatured DESC, p.DisplayOrder, pi.IsPrimary DESC, pi.DisplayOrder
                )) AS ImagePath,
-               c.DisplayOrder, c.IsActive,
+               c.DisplayOrder, c.IsActive, c.ShowOnHome,
                (SELECT COUNT(*) FROM dbo.Products p WHERE p.CategoryId = c.CategoryId) AS ProductCount
         FROM dbo.Categories c
         WHERE (@IncludeInactive = 1 OR c.IsActive = 1)
@@ -116,13 +117,13 @@ BEGIN
                    WHERE p.CategoryId = c.CategoryId AND p.IsActive = 1
                    ORDER BY p.IsFeatured DESC, p.DisplayOrder, pi.IsPrimary DESC, pi.DisplayOrder
                )) AS ImagePath,
-               c.DisplayOrder, c.IsActive
+               c.DisplayOrder, c.IsActive, c.ShowOnHome
         FROM dbo.Categories c WHERE c.CategoryId = @CategoryId;
     END
     ELSE IF @Action = 'CREATE'
     BEGIN
-        INSERT INTO dbo.Categories (Name, Slug, Description, ImagePath, DisplayOrder, IsActive)
-        VALUES (@Name, @Slug, @Description, @ImagePath, @DisplayOrder, @IsActive);
+        INSERT INTO dbo.Categories (Name, Slug, Description, ImagePath, DisplayOrder, IsActive, ShowOnHome)
+        VALUES (@Name, @Slug, @Description, @ImagePath, @DisplayOrder, @IsActive, @ShowOnHome);
         SELECT SCOPE_IDENTITY() AS CategoryId;
     END
     ELSE IF @Action = 'UPDATE'
@@ -130,7 +131,7 @@ BEGIN
         UPDATE dbo.Categories
         SET Name = @Name, Slug = @Slug, Description = @Description,
             ImagePath = COALESCE(@ImagePath, ImagePath),
-            DisplayOrder = @DisplayOrder, IsActive = @IsActive, UpdatedAt = SYSUTCDATETIME()
+            DisplayOrder = @DisplayOrder, IsActive = @IsActive, ShowOnHome = @ShowOnHome, UpdatedAt = SYSUTCDATETIME()
         WHERE CategoryId = @CategoryId;
     END
     ELSE IF @Action = 'DELETE'
@@ -852,6 +853,58 @@ BEGIN
         (SELECT COUNT(*) FROM dbo.Leads)                        AS Leads,
         (SELECT COUNT(*) FROM dbo.Leads WHERE Status = 'new')   AS NewLeads,
         (SELECT COUNT(*) FROM dbo.Testimonials)                 AS Testimonials;
+END
+GO
+
+/* =========================================================================
+   CLIENT LOGOS
+   ========================================================================= */
+CREATE OR ALTER PROCEDURE dbo.usp_ClientLogo_Manage
+    @Action        NVARCHAR(50),
+    @LogoId        INT = NULL,
+    @Name          NVARCHAR(100) = NULL,
+    @ImagePath     NVARCHAR(255) = NULL,
+    @DisplayOrder  INT = 0,
+    @IsActive      BIT = 1,
+    @IncludeInactive BIT = 0
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    IF @Action = 'GET_ALL'
+    BEGIN
+        SELECT *
+        FROM dbo.ClientLogos
+        WHERE (@IncludeInactive = 1 OR IsActive = 1)
+        ORDER BY DisplayOrder ASC, Name ASC;
+    END
+
+    ELSE IF @Action = 'GET_BY_ID'
+    BEGIN
+        SELECT *
+        FROM dbo.ClientLogos WHERE LogoId = @LogoId;
+    END
+
+    ELSE IF @Action = 'CREATE'
+    BEGIN
+        INSERT INTO dbo.ClientLogos (Name, ImagePath, DisplayOrder, IsActive)
+        VALUES (@Name, @ImagePath, @DisplayOrder, @IsActive);
+    END
+
+    ELSE IF @Action = 'UPDATE'
+    BEGIN
+        UPDATE dbo.ClientLogos
+        SET Name = ISNULL(@Name, Name),
+            ImagePath = ISNULL(@ImagePath, ImagePath),
+            DisplayOrder = ISNULL(@DisplayOrder, DisplayOrder),
+            IsActive = ISNULL(@IsActive, IsActive)
+        WHERE LogoId = @LogoId;
+    END
+
+    ELSE IF @Action = 'DELETE'
+    BEGIN
+        DELETE FROM dbo.ClientLogos WHERE LogoId = @LogoId;
+    END
 END
 GO
 

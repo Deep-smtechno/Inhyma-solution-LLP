@@ -11,6 +11,7 @@ const cache = {
   settings: null,
   navCategories: null,
   navIndustries: null,
+  navProducts: null,
   homeHtml: null,    // full rendered HTML for home page
   homeHtmlTime: 0,
 };
@@ -19,6 +20,7 @@ function clearCache() {
   cache.settings = null;
   cache.navCategories = null;
   cache.navIndustries = null;
+  cache.navProducts = null;
   cache.homeHtml = null;
   cache.homeHtmlTime = 0;
 }

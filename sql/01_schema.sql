@@ -45,6 +45,7 @@ BEGIN
         ImagePath     NVARCHAR(400) NULL,
         DisplayOrder  INT           NOT NULL CONSTRAINT DF_Categories_Order DEFAULT(0),
         IsActive      BIT           NOT NULL CONSTRAINT DF_Categories_IsActive DEFAULT(1),
+        ShowOnHome    BIT           NOT NULL CONSTRAINT DF_Categories_ShowOnHome DEFAULT(1),
         CreatedAt     DATETIME2     NOT NULL CONSTRAINT DF_Categories_CreatedAt DEFAULT(SYSUTCDATETIME()),
         UpdatedAt     DATETIME2     NULL
     );
@@ -324,6 +325,22 @@ BEGIN
         DisplayOrder  INT           NOT NULL CONSTRAINT DF_Testimonials_Order DEFAULT(0),
         IsActive      BIT           NOT NULL CONSTRAINT DF_Testimonials_IsActive DEFAULT(1),
         CreatedAt     DATETIME2     NOT NULL CONSTRAINT DF_Testimonials_CreatedAt DEFAULT(SYSUTCDATETIME())
+    );
+END
+GO
+
+/* =========================================================================
+   ClientLogos (trusted partners)
+   ========================================================================= */
+IF OBJECT_ID('dbo.ClientLogos', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.ClientLogos (
+        LogoId        INT           IDENTITY(1,1) NOT NULL CONSTRAINT PK_ClientLogos PRIMARY KEY,
+        Name          NVARCHAR(100) NOT NULL,
+        ImagePath     NVARCHAR(255) NOT NULL,
+        DisplayOrder  INT           NOT NULL CONSTRAINT DF_ClientLogos_Order DEFAULT(0),
+        IsActive      BIT           NOT NULL CONSTRAINT DF_ClientLogos_IsActive DEFAULT(1),
+        CreatedAt     DATETIME2     NOT NULL CONSTRAINT DF_ClientLogos_CreatedAt DEFAULT(SYSUTCDATETIME())
     );
 END
 GO

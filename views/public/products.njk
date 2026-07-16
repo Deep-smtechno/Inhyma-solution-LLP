@@ -5,58 +5,98 @@
 {{ banner('Our Products', 'Explore our full range of industrial packaging and automation equipment.', [{label:'Products'}]) }}
 
 <section class="section">
-  <div class="container">
+  <div class="container container--wide">
+    <div class="products-layout">
+      <!-- Sidebar -->
+      <aside class="products-sidebar">
+        <h3 class="products-sidebar__title">Categories</h3>
+        <ul class="products-sidebar__list">
+          <li class="products-sidebar__item">
+            <a href="/products" class="products-sidebar__link {{ 'active' if not activeCategory }}">
+              All Products
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </a>
+          </li>
+          {% for c in categories %}
+          <li class="products-sidebar__item">
+            <a href="/products?category={{ c.Slug }}" class="products-sidebar__link {{ 'active' if activeCategory == c.Slug }}">
+              {{ c.Name }}
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </a>
+            
+            <div class="products-sidebar__submenu">
+              <div class="products-sidebar__submenu-inner">
+                <div class="products-sidebar__submenu-list">
+                  {% for prod in navProducts %}
+                    {% if prod.CategoryId == c.CategoryId %}
+                      <a href="/products/{{ prod.Slug }}" class="products-sidebar__submenu-link">{{ prod.Name }}</a>
+                    {% endif %}
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+      </aside>
 
-    <div class="product-filter">
-      <div class="product-filter__categories">
-        <a href="/products" class="product-filter__btn {{ 'active' if not activeCategory }}">All Products</a>
-        {% for c in categories %}
-          <a href="/products?category={{ c.Slug }}" class="product-filter__btn {{ 'active' if activeCategory == c.Slug }}">{{ c.Name }}</a>
-        {% endfor %}
-      </div>
-      <form class="product-filter__search" method="get" action="/products">
-        {% if activeCategory %}<input type="hidden" name="category" value="{{ activeCategory }}">{% endif %}
-        <input type="text" name="q" class="product-filter__input" placeholder="Search products..." value="{{ search or '' }}">
-        <button class="btn btn--primary btn--sm" type="submit">Search</button>
-      </form>
-    </div>
+      <!-- Main Content -->
+      <main class="products-main">
+        <!-- Mobile-only horizontal category scroller (replaces the sidebar below 900px) -->
+        <div class="products-mobile-categories">
+          <div class="product-filter__categories">
+            <a href="/products" class="product-filter__btn {{ 'active' if not activeCategory }}">All Products</a>
+            {% for c in categories %}
+            <a href="/products?category={{ c.Slug }}" class="product-filter__btn {{ 'active' if activeCategory == c.Slug }}">{{ c.Name }}</a>
+            {% endfor %}
+          </div>
+        </div>
 
-    {% if products.length %}
-      <div class="product-grid" style="margin-top:var(--space-8);">
-        {% for p in products %}{{ productCard(p) }}{% endfor %}
-      </div>
+        <div class="product-filter" style="margin-bottom: var(--space-6); background: transparent; padding: 0; box-shadow: none;">
+          <form class="product-filter__search" method="get" action="/products" style="margin-left: auto;">
+            {% if activeCategory %}<input type="hidden" name="category" value="{{ activeCategory }}">{% endif %}
+            <input type="text" name="q" class="product-filter__input" placeholder="Search products..." value="{{ search or '' }}">
+            <button class="btn btn--primary btn--sm" type="submit">Search</button>
+          </form>
+        </div>
 
-      {% if totalPages > 1 %}
-      <div class="pagination">
-        {% if currentPage > 1 %}
-          <a href="?{% if activeCategory %}category={{ activeCategory }}&{% endif %}{% if search %}q={{ search }}&{% endif %}page={{ currentPage - 1 }}" class="pagination__btn">← Prev</a>
-        {% else %}
-          <span class="pagination__btn disabled">← Prev</span>
-        {% endif %}
+        {% if products.length %}
+          <div class="product-grid">
+            {% for p in products %}{{ productCard(p) }}{% endfor %}
+          </div>
 
-        {% for p in range(1, totalPages + 1) %}
-          {% if p == currentPage %}
-            <span class="pagination__btn active">{{ p }}</span>
-          {% else %}
-            <a href="?{% if activeCategory %}category={{ activeCategory }}&{% endif %}{% if search %}q={{ search }}&{% endif %}page={{ p }}" class="pagination__btn">{{ p }}</a>
+          {% if totalPages > 1 %}
+          <div class="pagination">
+            {% if currentPage > 1 %}
+              <a href="?{% if activeCategory %}category={{ activeCategory }}&{% endif %}{% if search %}q={{ search }}&{% endif %}page={{ currentPage - 1 }}" class="pagination__btn">← Prev</a>
+            {% else %}
+              <span class="pagination__btn disabled">← Prev</span>
+            {% endif %}
+
+            {% for p in range(1, totalPages + 1) %}
+              {% if p == currentPage %}
+                <span class="pagination__btn active">{{ p }}</span>
+              {% else %}
+                <a href="?{% if activeCategory %}category={{ activeCategory }}&{% endif %}{% if search %}q={{ search }}&{% endif %}page={{ p }}" class="pagination__btn">{{ p }}</a>
+              {% endif %}
+            {% endfor %}
+
+            {% if currentPage < totalPages %}
+              <a href="?{% if activeCategory %}category={{ activeCategory }}&{% endif %}{% if search %}q={{ search }}&{% endif %}page={{ currentPage + 1 }}" class="pagination__btn">Next →</a>
+            {% else %}
+              <span class="pagination__btn disabled">Next →</span>
+            {% endif %}
+          </div>
           {% endif %}
-        {% endfor %}
-
-        {% if currentPage < totalPages %}
-          <a href="?{% if activeCategory %}category={{ activeCategory }}&{% endif %}{% if search %}q={{ search }}&{% endif %}page={{ currentPage + 1 }}" class="pagination__btn">Next →</a>
         {% else %}
-          <span class="pagination__btn disabled">Next →</span>
+          <div class="text-center" style="padding:var(--space-16) 0;">
+            <h3>No products found</h3>
+            <p style="color:var(--color-gray-500);">Try a different category or search term.</p>
+            <a href="/products" class="btn btn--primary">View All Products</a>
+          </div>
         {% endif %}
-      </div>
-      {% endif %}
-    {% else %}
-      <div class="text-center" style="padding:var(--space-16) 0;">
-        <h3>No products found</h3>
-        <p style="color:var(--color-gray-500);">Try a different category or search term.</p>
-        <a href="/products" class="btn btn--primary">View All Products</a>
-      </div>
-    {% endif %}
-
+      </main>
+    </div>
   </div>
 </section>
 {% endblock %}

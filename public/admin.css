@@ -268,6 +268,28 @@ img.thumb { width: 46px; height: 46px; object-fit: cover; border-radius: 8px; bo
   .form-grid { grid-template-columns: 1fr; }
   .content { padding: 18px; }
   .menu-btn { display: inline-grid !important; }
+  .topbar { padding: 0 16px; }
+  .topbar__view { display: none; }
+  .userchip__role { display: none; }
+  .repeater__row { flex-wrap: wrap; }
+  .repeater__row input, .repeater__row select { min-width: 0; flex-basis: 100%; }
+  .field-row { grid-template-columns: 1fr; gap: 2px; }
+}
+
+@media (max-width: 480px) {
+  .topbar__title { max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .userchip__name { max-width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .login-card { padding: 26px 20px; }
+  .card__header { padding: 14px 16px; }
+  .card__body { padding: 16px; }
+  .form-actions { flex-wrap: wrap; }
+  .form-actions .btn { flex: 1 1 auto; }
+}
+
+/* iOS zooms the viewport when focusing a field under 16px. */
+@media (max-width: 900px) {
+  .fg input[type=text], .fg input[type=email], .fg input[type=number], .fg input[type=password],
+  .fg input[type=date], .fg select, .fg textarea { font-size: 16px; }
 }
 .menu-btn { display: none; place-items: center; width: 38px; height: 38px; border: 1px solid var(--c-line); border-radius: 9px; background: #fff; cursor: pointer; }
 .menu-btn svg { width: 20px; height: 20px; color: var(--c-ink-2); }

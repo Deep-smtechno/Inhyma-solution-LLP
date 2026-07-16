@@ -7,7 +7,7 @@
 <section class="section">
   <div class="container">
     {% if posts.length %}
-    <div class="blog-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:var(--space-6);">
+    <div class="blog-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(300px, 100%), 1fr));gap:var(--space-6);">
       {% for b in posts %}
       <a href="/blog/{{ b.Slug }}" class="blog-card reveal">
         <div class="blog-card__image">{% if b.ImagePath %}<img src="{{ b.ImagePath }}" alt="{{ b.Title }}" style="width:100%;height:100%;object-fit:cover;">{% else %}<div class="category-card__image-placeholder" style="height:100%;font-size:2rem;">{{ b.IconEmoji or '📦' }}</div>{% endif %}</div>

@@ -152,6 +152,8 @@ html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   font-size: 16px;
+  overflow-x: hidden;
+  width: 100%;
 }
 
 body {
@@ -162,6 +164,7 @@ body {
   color: var(--color-gray-700);
   background-color: var(--color-white);
   overflow-x: hidden;
+  width: 100%;
 }
 
 img {
@@ -557,17 +560,19 @@ p {
   right: 0;
   z-index: 1000;
   height: var(--header-height);
-  transition: all var(--transition-smooth);
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+  /* Only the properties that actually change — `all` would also animate layout
+     values and forces needless work on every scroll tick. */
+  transition: background var(--transition-smooth),
+              border-color var(--transition-smooth),
+              box-shadow var(--transition-smooth);
+  background: var(--color-white);
+  border-bottom: 1px solid rgba(27, 58, 92, 0.08);
 }
 
 .header.scrolled {
-  background: rgba(255, 255, 255, 0.85);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.4);
-  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05);
+  background: var(--color-white);
+  border-bottom-color: rgba(27, 58, 92, 0.1);
+  box-shadow: 0 4px 24px rgba(27, 58, 92, 0.1);
 }
 
 .header__inner {
@@ -589,24 +594,17 @@ p {
   width: auto;
 }
 
+/* A recessed track tinted with the brand navy rather than neutral grey, so the
+   nav reads as part of the palette instead of a grey blob on white. */
 .header__nav {
   display: flex;
   align-items: center;
   gap: var(--space-1);
-  background: rgba(255, 255, 255, 0.45);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.6);
+  background: rgba(27, 58, 92, 0.05);
+  border: 1px solid rgba(27, 58, 92, 0.07);
   padding: 6px 8px;
   border-radius: var(--radius-full);
-  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.5), 0 4px 15px rgba(0, 0, 0, 0.02);
-  transition: all var(--transition-smooth);
-}
-
-.header.scrolled .header__nav {
-  background: rgba(255, 255, 255, 0.6);
-  border-color: rgba(255, 255, 255, 0.8);
-  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.6), 0 4px 15px rgba(0, 0, 0, 0.01);
+  transition: background var(--transition-smooth), border-color var(--transition-smooth);
 }
 
 .header__nav-link {
@@ -618,13 +616,29 @@ p {
   transition: all var(--transition-smooth);
   position: relative;
   border: 1px solid transparent;
+  /* A wrapped label ("About / Us") would break the pill's height */
+  white-space: nowrap;
 }
 
+/* Between the mobile breakpoint and ~1100px the logo, six links and both CTAs
+   compete for the same row. Tighten the links and drop the WhatsApp button —
+   the floating WhatsApp action is on screen at all times regardless. */
+@media (max-width: 1100px) {
+  .header__nav-link {
+    padding: 6px 11px;
+  }
+
+  .header__actions .btn--whatsapp {
+    display: none;
+  }
+}
+
+/* Lifts out of the recessed track as a crisp white pill */
 .header__nav-link:hover {
   color: var(--color-blue);
-  background: rgba(255, 255, 255, 0.7);
-  border-color: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 4px 10px rgba(43, 94, 167, 0.08), inset 0 1px 1px rgba(255, 255, 255, 0.9);
+  background: var(--color-white);
+  border-color: rgba(27, 58, 92, 0.08);
+  box-shadow: 0 2px 8px rgba(27, 58, 92, 0.12);
   transform: translateY(-1px);
 }
 
@@ -633,6 +647,96 @@ p {
   background: linear-gradient(135deg, var(--color-blue), var(--color-blue-light));
   border-color: rgba(255, 255, 255, 0.1);
   box-shadow: var(--shadow-blue);
+}
+
+/* Dropdown Navigation — two-column mega panel.
+   The catalogue carries ~20 categories, which a single 200px column could not
+   hold without wrapping every other name and running past the fold. Two columns
+   keep every label on one line and the whole panel on screen. */
+.nav-dropdown {
+  position: relative;
+}
+
+.nav-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 0;
+  width: 620px;
+  /* Never spill past the viewport on smaller desktops */
+  max-width: calc(100vw - 48px);
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 2px;
+  background: var(--color-white);
+  border: 1px solid var(--color-gray-100);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+  padding: var(--space-3);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(8px);
+  transition: opacity var(--transition-fast),
+              transform var(--transition-fast),
+              visibility var(--transition-fast);
+  z-index: 100;
+}
+
+/* Invisible bridge across the 10px gap so the panel does not vanish while the
+   pointer travels from the link down into it. */
+.nav-dropdown-menu::before {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: 0;
+  right: 0;
+  height: 10px;
+}
+
+.nav-dropdown:hover > .nav-dropdown-menu,
+.nav-dropdown:focus-within > .nav-dropdown-menu {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.nav-dropdown-item {
+  display: block;
+  padding: 10px 14px;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  color: var(--color-gray-700);
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.nav-dropdown-item:hover {
+  background: var(--color-blue-tint);
+  color: var(--color-blue);
+}
+
+.nav-dropdown-all {
+  grid-column: 1 / -1;
+  margin-top: var(--space-2);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-gray-100);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding-left: 14px;
+  padding-right: 14px;
+  padding-bottom: 4px;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--color-blue);
+  transition: color var(--transition-fast);
+}
+
+.nav-dropdown-all:hover {
+  color: var(--color-accent);
 }
 
 .header__actions {
@@ -696,17 +800,30 @@ p {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  opacity: 0.25;
+  opacity: 1; /* Ensure images are fully visible under gradient */
 }
 
 .hero__bg::after {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg,
-      rgba(27, 58, 92, 0.92) 0%,
-      rgba(18, 40, 64, 0.85) 50%,
-      rgba(43, 94, 167, 0.75) 100%);
+  /* Dark on the left for text, completely transparent on the right for image */
+  background: linear-gradient(90deg,
+      rgba(15, 30, 50, 0.98) 0%,
+      rgba(15, 30, 50, 0.90) 35%,
+      rgba(15, 30, 50, 0) 65%,
+      rgba(15, 30, 50, 0) 100%);
+}
+
+@media (max-width: 900px) {
+  /* Stacked layout puts copy over the full image height, so the scrim has to
+     hold contrast all the way down rather than fading out behind the stats. */
+  .hero__bg::after {
+    background: linear-gradient(180deg,
+        rgba(15, 30, 50, 0.96) 0%,
+        rgba(15, 30, 50, 0.88) 55%,
+        rgba(15, 30, 50, 0.84) 100%);
+  }
 }
 
 .hero__content {
@@ -1160,20 +1277,150 @@ p {
 }
 
 .industry-card:hover {
-  transform: translateY(-6px);
+  transform: translateY(-2px);
   box-shadow: var(--shadow-xl);
+}
+
+/* --- Products Layout (Sidebar + Main) --- */
+.products-layout {
+  display: flex;
+  gap: var(--space-8);
+  align-items: flex-start;
+}
+
+.products-sidebar {
+  width: 280px;
+  flex-shrink: 0;
+  background: var(--color-off-white);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-4) 0;
+}
+
+.products-sidebar__title {
+  font-size: var(--fs-md);
+  font-weight: var(--fw-bold);
+  color: var(--color-gray-900);
+  padding: 0 var(--space-6) var(--space-4);
+  border-bottom: 1px solid var(--color-gray-200);
+  margin-bottom: var(--space-2);
+}
+
+.products-sidebar__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.products-sidebar__item {
+  position: relative;
+}
+
+.products-sidebar__link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) var(--space-6);
+  font-size: var(--fs-sm);
+  color: var(--color-gray-700);
+  transition: all var(--transition-fast);
+}
+
+.products-sidebar__link:hover, .products-sidebar__link.active {
+  background: var(--color-blue-tint);
+  color: var(--color-blue);
+}
+
+.products-sidebar__link svg {
+  color: var(--color-gray-400);
+  transition: transform var(--transition-fast);
+}
+
+/* Sidebar Submenu (Accordion style) */
+.products-sidebar__submenu {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows var(--transition-smooth);
+}
+
+.products-sidebar__submenu-inner {
+  overflow: hidden;
+}
+
+.products-sidebar__item:hover .products-sidebar__submenu {
+  grid-template-rows: 1fr;
+}
+
+.products-sidebar__item:hover .products-sidebar__link svg {
+  transform: rotate(90deg);
+}
+
+.products-sidebar__submenu-list {
+  padding: 0 0 var(--space-3) var(--space-8);
+  margin-top: calc(var(--space-2) * -1); /* slight overlap for visual flow */
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.products-sidebar__submenu-link {
+  display: block;
+  padding: 6px 12px;
+  color: var(--color-gray-600);
+  font-size: var(--fs-xs);
+  transition: all var(--transition-fast);
+  border-radius: var(--radius-sm);
+  border-left: 2px solid transparent;
+}
+
+.products-sidebar__submenu-link:hover {
+  background: var(--color-blue-tint);
+  color: var(--color-blue);
+  border-left-color: var(--color-blue);
+  transform: translateX(4px);
+}
+
+.products-main {
+  flex-grow: 1;
+  min-width: 0; /* prevent overflow */
+}
+
+.products-mobile-categories {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .products-layout {
+    flex-direction: column;
+    /* align-items controls the horizontal axis once the direction is column;
+       stretch keeps children at container width rather than content width. */
+    align-items: stretch;
+  }
+  /* The vertical sidebar (16+ categories, hover-only submenus) doesn't work on
+     touch — replace it with a compact horizontal scroller so users reach
+     products without a long scroll past the category list. */
+  .products-sidebar {
+    display: none;
+  }
+  .products-main {
+    width: 100%;
+  }
+  .products-mobile-categories {
+    display: block;
+    margin-bottom: var(--space-4);
+  }
 }
 
 /* --- Product Grid (responsive card layout, Amazon-style) --- */
 .product-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(270px, 100%), 1fr));
   gap: var(--space-6);
 }
 
 @media (max-width: 600px) {
   .product-grid {
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    grid-template-columns: repeat(2, 1fr);
     gap: var(--space-4);
   }
   .product-card__body {
@@ -1515,7 +1762,7 @@ p {
   padding: 0;
   margin: 0 0 var(--space-6) 0;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr));
   gap: var(--space-3);
 }
 
@@ -2221,6 +2468,7 @@ p {
   display: flex;
   justify-content: center;
   align-items: center;
+  flex-wrap: wrap;
   gap: var(--space-2);
   margin-top: var(--space-12);
 }
@@ -2302,6 +2550,10 @@ p {
   .header__nav.open {
     display: flex;
     flex-direction: column;
+    /* Direction is now column, so align-items governs the horizontal axis —
+       stretch makes each row span the drawer instead of hugging its label,
+       which keeps the whole row tappable. */
+    align-items: stretch;
     position: absolute;
     top: var(--header-height);
     left: 0;
@@ -2633,13 +2885,6 @@ p {
   overflow: hidden;
 }
 
-.page-banner::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-}
-
 .page-banner__content {
   position: relative;
   z-index: 2;
@@ -2701,6 +2946,7 @@ p {
 .product-filter__categories {
   display: flex;
   gap: var(--space-2);
+  max-width: 100%;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
@@ -3293,7 +3539,7 @@ p {
    ============================================================ */
 .solution-page-grid-new {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(340px, 100%), 1fr));
   gap: var(--space-8);
   margin-top: var(--space-4);
 }
@@ -3488,5 +3734,257 @@ p {
 
   100% {
     transform: translateX(-50%);
+  }
+}
+/* Marquee Scroll Animation */
+@keyframes scrollMarquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.marquee-scroll {
+  animation: scrollMarquee 30s linear infinite;
+}
+.marquee-scroll:hover {
+  animation-play-state: paused;
+}
+
+
+/* ============================================================
+   27. GLOBAL REACH STATS (Home page)
+   ============================================================ */
+.gr-stat-item:hover {
+  transform: translateY(-2px);
+  border-color: var(--color-gray-300) !important;
+  background: var(--color-white) !important;
+  box-shadow: var(--shadow-sm);
+}
+
+@media (max-width: 991px) {
+  .gr-stats-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: var(--space-3) !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .gr-stats-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ---------- Consultation Modal ---------- */
+.modal {
+  border: none;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  padding: 0;
+  max-width: 500px;
+  width: 90%;
+}
+.modal::backdrop {
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+}
+.modal__content {
+  padding: var(--space-6);
+  position: relative;
+}
+.modal__close {
+  position: absolute;
+  top: var(--space-4);
+  right: var(--space-4);
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: var(--color-gray-500);
+}
+.modal__close:hover {
+  color: var(--color-gray-800);
+}
+
+/* ============================================================
+   28. MOBILE HARDENING
+   Cross-cutting rules for small screens and touch input.
+   ============================================================ */
+
+/* --- iOS auto-zooms any field whose text is under 16px. Keep inputs at 16px
+   on touch layouts so focusing a field never zooms the viewport. --- */
+@media (max-width: 992px) {
+  .product-filter__input,
+  .form-input,
+  .form-textarea,
+  .form-select {
+    font-size: 16px;
+  }
+}
+
+/* --- 100vh ignores the collapsing browser chrome on mobile; dvh tracks it. --- */
+@supports (height: 100dvh) {
+  @media (max-width: 992px) {
+    .hero {
+      min-height: 100dvh;
+    }
+  }
+}
+
+/* --- Hero copy sits on photography at these sizes; lift the dimmer text so it
+   stays readable against the brighter lower half of the image. --- */
+@media (max-width: 900px) {
+  .hero__stat-label {
+    color: rgba(255, 255, 255, 0.75);
+  }
+
+  .hero__subtitle {
+    color: rgba(255, 255, 255, 0.85);
+  }
+}
+
+/* --- Header: reclaim vertical space and respect notches --- */
+@media (max-width: 576px) {
+  :root {
+    --header-height: 64px;
+  }
+
+  .header__inner {
+    padding: 0 var(--space-4);
+  }
+
+  .header__logo img {
+    height: 34px;
+  }
+}
+
+/* --- Mobile nav: surface the CTAs that the header hides below 576px --- */
+.header__nav-cta {
+  display: none;
+}
+
+@media (max-width: 992px) {
+  .header__nav.open .header__nav-cta {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    /* auto pins the CTAs to the foot of the drawer instead of stranding them
+       mid-panel above a large empty gap */
+    margin-top: auto;
+    padding-top: var(--space-6);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    border-top: 1px solid var(--color-gray-100);
+  }
+
+  .header__nav.open .header__nav-cta .btn {
+    width: 100%;
+    padding: 14px 24px;
+    font-size: var(--fs-sm);
+  }
+
+  /* Hover-triggered flyout is unreachable on touch and would overlay the
+     drawer; the Products link itself navigates to the full listing. */
+  .header__nav.open .nav-dropdown-menu {
+    display: none;
+  }
+}
+
+/* --- Touch targets: keep tappable controls near the 44px guideline --- */
+@media (hover: none) and (pointer: coarse) {
+  .product-filter__btn {
+    padding: 11px 18px;
+  }
+
+  .pagination__btn {
+    min-width: 44px;
+    height: 44px;
+  }
+
+  .footer__social-link {
+    width: 44px;
+    height: 44px;
+  }
+}
+
+/* --- Industry cards reveal their description on hover, which touch devices
+   never trigger. Show it inline instead so the copy is not unreachable. --- */
+@media (hover: none) and (pointer: coarse) {
+  .industry-card__desc {
+    max-height: none;
+    overflow: visible;
+    margin-top: var(--space-2);
+  }
+}
+
+/* --- Product cards: a fixed 240px image is wildly off-aspect inside a ~136px
+   column, so switch to a ratio-driven box on small screens. --- */
+@media (max-width: 600px) {
+  .product-card__image {
+    height: auto;
+    aspect-ratio: 4 / 3;
+  }
+
+  .product-card__title {
+    font-size: var(--fs-sm);
+  }
+}
+
+/* --- Marquee edge fades are wider than a phone; shrink so cards stay legible --- */
+@media (max-width: 768px) {
+  .trust-bar__marquee::before,
+  .trust-bar__marquee::after,
+  .testimonials-marquee::before,
+  .testimonials-marquee::after {
+    width: 40px;
+  }
+}
+
+/* --- Floating WhatsApp button: smaller, clear of the iOS home indicator, and
+   out of the way of card actions it used to sit on top of. --- */
+@media (max-width: 768px) {
+  .whatsapp-float {
+    width: 52px;
+    height: 52px;
+    right: var(--space-4);
+    bottom: calc(var(--space-4) + env(safe-area-inset-bottom, 0px));
+  }
+
+  .whatsapp-float svg {
+    width: 24px;
+    height: 24px;
+  }
+}
+
+/* --- Notch / safe-area padding for edge-to-edge devices --- */
+@supports (padding: env(safe-area-inset-left)) {
+  @media (max-width: 992px) {
+    .header__inner,
+    .container {
+      padding-left: max(var(--space-4), env(safe-area-inset-left));
+      padding-right: max(var(--space-4), env(safe-area-inset-right));
+    }
+  }
+}
+
+/* --- Long unbroken strings (emails, URLs, model codes) must not force width --- */
+.footer__contact-item,
+.contact-info-card__text,
+.field-row .v,
+.spec-table td {
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+/* --- Respect reduced-motion: stop the marquees, sliders and reveals --- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .reveal {
+    opacity: 1;
+    transform: none;
   }
 }
