@@ -11,23 +11,39 @@
   </div>
 </section>
 
-<section class="section">
+<section class="section" style="position: relative; overflow: hidden;">
   <div class="container">
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(320px, 100%), 1fr));gap:var(--space-8);">
       
       <!-- Mission -->
-      <div class="reveal" style="padding:var(--space-8);background:var(--color-white);border-radius:var(--radius-lg);border:1px solid var(--color-gray-100);box-shadow:var(--shadow-md);">
-        <h3 style="font-size:var(--fs-2xl); font-weight:var(--fw-bold); margin-bottom:var(--space-4); color:var(--color-primary);">Our Mission</h3>
-        <p style="color:var(--color-gray-600); line-height:var(--lh-relaxed);">
-          To empower global manufacturing with cutting-edge packaging machinery and automation solutions, delivering uncompromised quality, efficiency, and reliability while driving sustainable industrial growth.
+      <div class="reveal" style="position:relative; padding:var(--space-10) var(--space-8);background:var(--color-white);border-radius:var(--radius-xl);border:1px solid var(--color-gray-100);box-shadow:var(--shadow-lg);overflow:hidden;transition:transform var(--transition-smooth);" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
+        <div style="position:absolute;top:-30px;right:-30px;opacity:0.03;transform:rotate(15deg);pointer-events:none;">
+          <svg width="220" height="220" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        </div>
+        <div style="display:flex;align-items:center;gap:var(--space-4);margin-bottom:var(--space-6);position:relative;z-index:2;">
+          <div style="width:56px;height:56px;background:var(--color-blue);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--color-white);box-shadow:0 8px 16px rgba(27, 58, 92, 0.2);">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>
+          </div>
+          <h3 style="font-size:var(--fs-2xl); font-weight:var(--fw-bold); margin:0; color:var(--color-primary);letter-spacing:-0.5px;">Our Mission</h3>
+        </div>
+        <p style="color:var(--color-gray-600); line-height:var(--lh-loose); font-size:var(--fs-lg); margin:0; position:relative; z-index:2;">
+          To empower global manufacturing with <strong style="color:var(--color-primary);">cutting-edge packaging machinery</strong> and automation solutions, delivering uncompromised quality, efficiency, and reliability while driving sustainable industrial growth.
         </p>
       </div>
 
       <!-- Vision -->
-      <div class="reveal" style="padding:var(--space-8);background:linear-gradient(135deg, var(--color-primary), var(--color-blue));border-radius:var(--radius-lg);box-shadow:var(--shadow-md);color:var(--color-white);">
-        <h3 style="font-size:var(--fs-2xl); font-weight:var(--fw-bold); margin-bottom:var(--space-4); color:var(--color-white);">Our Vision</h3>
-        <p style="color:rgba(255,255,255,0.9); line-height:var(--lh-relaxed);">
-          To be the world's most trusted partner in industrial automation, pioneering innovative technologies that redefine production lines and set new global standards for manufacturing excellence.
+      <div class="reveal" style="position:relative; padding:var(--space-10) var(--space-8);background:linear-gradient(135deg, var(--color-primary) 0%, var(--color-blue) 100%);border-radius:var(--radius-xl);box-shadow:var(--shadow-xl);color:var(--color-white);overflow:hidden;transition:transform var(--transition-smooth);" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
+        <div style="position:absolute;bottom:-30px;right:-30px;opacity:0.1;transform:rotate(-15deg);pointer-events:none;">
+          <svg width="220" height="220" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>
+        </div>
+        <div style="display:flex;align-items:center;gap:var(--space-4);margin-bottom:var(--space-6);position:relative;z-index:2;">
+          <div style="width:56px;height:56px;background:rgba(255,255,255,0.15);backdrop-filter:blur(4px);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--color-white);box-shadow:0 8px 16px rgba(0, 0, 0, 0.1);">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+          </div>
+          <h3 style="font-size:var(--fs-2xl); font-weight:var(--fw-bold); margin:0; color:var(--color-white);letter-spacing:-0.5px;">Our Vision</h3>
+        </div>
+        <p style="color:rgba(255,255,255,0.9); line-height:var(--lh-loose); font-size:var(--fs-lg); margin:0; position:relative; z-index:2;">
+          To be the world's most trusted partner in industrial automation, pioneering <strong style="color:var(--color-white);">innovative technologies</strong> that redefine production lines and set new global standards for manufacturing excellence.
         </p>
       </div>
 
