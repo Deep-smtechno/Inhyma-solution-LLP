@@ -563,8 +563,8 @@ p {
   /* Only the properties that actually change — `all` would also animate layout
      values and forces needless work on every scroll tick. */
   transition: background var(--transition-smooth),
-              border-color var(--transition-smooth),
-              box-shadow var(--transition-smooth);
+    border-color var(--transition-smooth),
+    box-shadow var(--transition-smooth);
   background: var(--color-white);
   border-bottom: 1px solid rgba(27, 58, 92, 0.08);
 }
@@ -676,8 +676,8 @@ p {
   visibility: hidden;
   transform: translateY(8px);
   transition: opacity var(--transition-fast),
-              transform var(--transition-fast),
-              visibility var(--transition-fast);
+    transform var(--transition-fast),
+    visibility var(--transition-fast);
   z-index: 100;
 }
 
@@ -692,8 +692,8 @@ p {
   height: 10px;
 }
 
-.nav-dropdown:hover > .nav-dropdown-menu,
-.nav-dropdown:focus-within > .nav-dropdown-menu {
+.nav-dropdown:hover>.nav-dropdown-menu,
+.nav-dropdown:focus-within>.nav-dropdown-menu {
   opacity: 1;
   visibility: visible;
   transform: translateY(0);
@@ -800,7 +800,8 @@ p {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  opacity: 1; /* Ensure images are fully visible under gradient */
+  opacity: 1;
+  /* Ensure images are fully visible under gradient */
 }
 
 .hero__bg::after {
@@ -816,6 +817,7 @@ p {
 }
 
 @media (max-width: 900px) {
+
   /* Stacked layout puts copy over the full image height, so the scrim has to
      hold contrast all the way down rather than fading out behind the stats. */
   .hero__bg::after {
@@ -1326,7 +1328,8 @@ p {
   transition: all var(--transition-fast);
 }
 
-.products-sidebar__link:hover, .products-sidebar__link.active {
+.products-sidebar__link:hover,
+.products-sidebar__link.active {
   background: var(--color-blue-tint);
   color: var(--color-blue);
 }
@@ -1357,7 +1360,8 @@ p {
 
 .products-sidebar__submenu-list {
   padding: 0 0 var(--space-3) var(--space-8);
-  margin-top: calc(var(--space-2) * -1); /* slight overlap for visual flow */
+  margin-top: calc(var(--space-2) * -1);
+  /* slight overlap for visual flow */
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -1382,7 +1386,8 @@ p {
 
 .products-main {
   flex-grow: 1;
-  min-width: 0; /* prevent overflow */
+  min-width: 0;
+  /* prevent overflow */
 }
 
 .products-mobile-categories {
@@ -1396,15 +1401,18 @@ p {
        stretch keeps children at container width rather than content width. */
     align-items: stretch;
   }
+
   /* The vertical sidebar (16+ categories, hover-only submenus) doesn't work on
      touch — replace it with a compact horizontal scroller so users reach
      products without a long scroll past the category list. */
   .products-sidebar {
     display: none;
   }
+
   .products-main {
     width: 100%;
   }
+
   .products-mobile-categories {
     display: block;
     margin-bottom: var(--space-4);
@@ -1423,13 +1431,16 @@ p {
     grid-template-columns: repeat(2, 1fr);
     gap: var(--space-4);
   }
+
   .product-card__body {
     padding: var(--space-4) !important;
   }
+
   .product-card__actions {
     flex-direction: column;
     gap: var(--space-2) !important;
   }
+
   .product-card__actions .btn {
     width: 100% !important;
     padding: 8px 12px !important;
@@ -3736,14 +3747,22 @@ p {
     transform: translateX(-50%);
   }
 }
+
 /* Marquee Scroll Animation */
 @keyframes scrollMarquee {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(-50%);
+  }
 }
+
 .marquee-scroll {
   animation: scrollMarquee 30s linear infinite;
 }
+
 .marquee-scroll:hover {
   animation-play-state: paused;
 }
@@ -3776,19 +3795,22 @@ p {
 .modal {
   border: none;
   border-radius: var(--radius-lg);
-  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
   padding: 0;
   max-width: 500px;
   width: 90%;
 }
+
 .modal::backdrop {
   background: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(4px);
 }
+
 .modal__content {
   padding: var(--space-6);
   position: relative;
 }
+
 .modal__close {
   position: absolute;
   top: var(--space-4);
@@ -3799,6 +3821,7 @@ p {
   cursor: pointer;
   color: var(--color-gray-500);
 }
+
 .modal__close:hover {
   color: var(--color-gray-800);
 }
@@ -3811,6 +3834,7 @@ p {
 /* --- iOS auto-zooms any field whose text is under 16px. Keep inputs at 16px
    on touch layouts so focusing a field never zooms the viewport. --- */
 @media (max-width: 992px) {
+
   .product-filter__input,
   .form-input,
   .form-textarea,
@@ -3928,6 +3952,7 @@ p {
 
 /* --- Marquee edge fades are wider than a phone; shrink so cards stay legible --- */
 @media (max-width: 768px) {
+
   .trust-bar__marquee::before,
   .trust-bar__marquee::after,
   .testimonials-marquee::before,
@@ -3955,6 +3980,7 @@ p {
 /* --- Notch / safe-area padding for edge-to-edge devices --- */
 @supports (padding: env(safe-area-inset-left)) {
   @media (max-width: 992px) {
+
     .header__inner,
     .container {
       padding-left: max(var(--space-4), env(safe-area-inset-left));
@@ -3974,6 +4000,7 @@ p {
 
 /* --- Respect reduced-motion: stop the marquees, sliders and reveals --- */
 @media (prefers-reduced-motion: reduce) {
+
   *,
   *::before,
   *::after {

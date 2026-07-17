@@ -348,7 +348,7 @@ window.addEventListener('scroll', () => {
 // leave a card stuck mid-tilt. Only wire this up for real pointer devices.
 const supportsHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
 
-if (supportsHover) document.querySelectorAll('.category-card, .industry-card').forEach(card => {
+if (supportsHover) document.querySelectorAll('.category-card').forEach(card => {
   card.addEventListener('mousemove', (e) => {
     const rect = card.getBoundingClientRect();
     const x = e.clientX - rect.left;
