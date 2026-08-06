@@ -26,7 +26,7 @@
     {% if p.Badge %}<span class="product-card__badge">{{ p.Badge }}</span>{% endif %}
   </div>
   <div class="product-card__body">
-    <span class="product-card__category">{{ p.CategoryLabel or p.CategoryName }}</span>
+    <span class="product-card__category">{{ p.CategoryLabel or p.SubcategoryName or p.CategoryName }}</span>
     <h3 class="product-card__title">{{ p.Name }}</h3>
     {% if p.ShortDescription %}<p class="product-card__excerpt" style="color:var(--color-gray-500);font-size:var(--fs-sm);margin:var(--space-2) 0;">{{ p.ShortDescription | truncate(90) }}</p>{% endif %}
     <div class="product-card__actions">

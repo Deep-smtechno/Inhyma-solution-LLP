@@ -1,0 +1,25 @@
+{% extends "admin/layout.njk" %}
+{% from "admin/_macros.njk" import listTop, delBtn, activePill %}
+{% block content %}
+<div class="card">
+  {{ listTop('All Subcategories', '/admin/subcategories/new', 'Add Subcategory') }}
+  {% if items.length %}
+  <div class="table-wrap"><table class="data">
+    <thead><tr><th>Image</th><th>Name</th><th>Category</th><th>Products</th><th>Order</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+      {% for s in items %}
+      <tr>
+        <td>{% if s.ImagePath %}<img class="thumb" src="{{ s.ImagePath }}" alt="">{% else %}<span class="muted">—</span>{% endif %}</td>
+        <td><strong>{{ s.Name }}</strong><div class="muted">{{ s.Slug }}</div></td>
+        <td>{{ s.CategoryName }}</td>
+        <td>{{ s.ProductCount }}</td>
+        <td>{{ s.DisplayOrder }}</td>
+        <td>{{ activePill(s.IsActive) }}</td>
+        <td><div class="row-actions"><a class="btn btn-outline btn-sm" href="/admin/subcategories/{{ s.SubcategoryId }}/edit">Edit</a>{{ delBtn('/admin/subcategories/' + (s.SubcategoryId|string) + '/delete', 'subcategory') }}</div></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table></div>
+  {% else %}<div class="empty">No subcategories yet. <a href="/admin/subcategories/new">Add one</a>.</div>{% endif %}
+</div>
+{% endblock %}

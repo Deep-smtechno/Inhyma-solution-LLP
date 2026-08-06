@@ -106,6 +106,74 @@ router.post('/categories/:id/delete', async (req, res, next) => {
 });
 
 /* ============================================================
+   SUBCATEGORIES
+   ============================================================ */
+router.get('/subcategories', async (req, res, next) => {
+  try {
+    res.render('admin/subcategories/list', {
+      title: 'Subcategories',
+      items: await query('usp_Subcategory_Manage', { Action: 'GET_ALL', IncludeInactive: 1 }),
+    });
+  } catch (err) { next(err); }
+});
+
+router.get('/subcategories/new', async (req, res, next) => {
+  try {
+    res.render('admin/subcategories/form', {
+      title: 'New Subcategory',
+      item: null,
+      categories: await query('usp_Category_Manage', { Action: 'GET_ALL', IncludeInactive: 1 }),
+    });
+  } catch (err) { next(err); }
+});
+
+router.get('/subcategories/:id/edit', async (req, res, next) => {
+  try {
+    const [item, categories] = await Promise.all([
+      queryOne('usp_Subcategory_Manage', { Action: 'GET_BY_ID', SubcategoryId: toInt(req.params.id) }),
+      query('usp_Category_Manage', { Action: 'GET_ALL', IncludeInactive: 1 }),
+    ]);
+    if (!item) { req.flash('error', 'Subcategory not found'); return res.redirect('/admin/subcategories'); }
+    res.render('admin/subcategories/form', { title: 'Edit Subcategory', item, categories });
+  } catch (err) { next(err); }
+});
+
+router.post('/subcategories/:id?', uploader('subcategories').single('image'), async (req, res, next) => {
+  try {
+    const b = req.body;
+    const id = req.params.id ? toInt(req.params.id) : null;
+    const imagePath = req.file ? webPath('subcategories', req.file.filename) : null;
+    const params = {
+      CategoryId: toInt(b.categoryId),
+      Name: b.name,
+      Slug: nullIfEmpty(b.slug) || makeSlug(b.name),
+      Description: nullIfEmpty(b.description),
+      ImagePath: imagePath,
+      DisplayOrder: toInt(b.displayOrder),
+      IsActive: toBit(b.isActive),
+    };
+    if (id) {
+      await execProc('usp_Subcategory_Manage', { Action: 'UPDATE', SubcategoryId: id, ...params });
+      req.flash('success', 'Subcategory updated');
+    } else {
+      await execProc('usp_Subcategory_Manage', { Action: 'CREATE', ...params });
+      req.flash('success', 'Subcategory created');
+    }
+    clearCache();
+    res.redirect('/admin/subcategories');
+  } catch (err) { next(err); }
+});
+
+router.post('/subcategories/:id/delete', async (req, res, next) => {
+  try {
+    await execProc('usp_Subcategory_Manage', { Action: 'DELETE', SubcategoryId: toInt(req.params.id) });
+    req.flash('success', 'Subcategory deleted');
+    clearCache();
+    res.redirect('/admin/subcategories');
+  } catch (err) { next(err); }
+});
+
+/* ============================================================
    PRODUCTS
    ============================================================ */
 router.get('/products', async (req, res, next) => {
@@ -132,8 +200,12 @@ router.get('/products', async (req, res, next) => {
 
 router.get('/products/new', async (req, res, next) => {
   try {
+    const [categories, subcategories] = await Promise.all([
+      query('usp_Category_Manage', { Action: 'GET_ALL', IncludeInactive: 1 }),
+      query('usp_Subcategory_Manage', { Action: 'GET_ALL', IncludeInactive: 1 }),
+    ]);
     res.render('admin/products/form', {
-      title: 'New Product', item: null, categories: await query('usp_Category_Manage', { Action: 'GET_ALL', IncludeInactive: 1 }),
+      title: 'New Product', item: null, categories, subcategories,
       features: [], specs: [], applications: [], images: [],
     });
   } catch (err) { next(err); }
@@ -144,9 +216,13 @@ router.get('/products/:id/edit', async (req, res, next) => {
     const result = await execProc('usp_Product_Manage', { Action: 'GET_BY_ID', ProductId: toInt(req.params.id) });
     const item = result.recordsets[0] && result.recordsets[0][0];
     if (!item) { req.flash('error', 'Product not found'); return res.redirect('/admin/products'); }
+    const [categories, subcategories] = await Promise.all([
+      query('usp_Category_Manage', { Action: 'GET_ALL', IncludeInactive: 1 }),
+      query('usp_Subcategory_Manage', { Action: 'GET_ALL', IncludeInactive: 1 }),
+    ]);
     res.render('admin/products/form', {
       title: 'Edit Product', item,
-      categories: await query('usp_Category_Manage', { Action: 'GET_ALL', IncludeInactive: 1 }),
+      categories, subcategories,
       features: result.recordsets[1] || [], specs: result.recordsets[2] || [],
       applications: result.recordsets[3] || [], images: result.recordsets[4] || [],
     });
@@ -183,6 +259,7 @@ router.post('/products/:id?', async (req, res, next) => {
     const id = req.params.id ? toInt(req.params.id) : null;
     const params = {
       CategoryId: nullIfEmpty(b.categoryId) ? toInt(b.categoryId) : { type: sql.Int, value: null },
+      SubcategoryId: nullIfEmpty(b.subcategoryId) ? toInt(b.subcategoryId) : { type: sql.Int, value: null },
       Name: b.name, Slug: nullIfEmpty(b.slug) || makeSlug(b.name),
       CategoryLabel: nullIfEmpty(b.categoryLabel),
       ShortDescription: nullIfEmpty(b.shortDescription),
@@ -198,6 +275,7 @@ router.post('/products/:id?', async (req, res, next) => {
       productId = r.recordset[0].ProductId;
     }
     await saveProductChildren(productId, b);
+    clearCache();
     req.flash('success', id ? 'Product updated' : 'Product created — now add images');
     res.redirect(`/admin/products/${productId}/edit`);
   } catch (err) { next(err); }
@@ -208,6 +286,7 @@ router.post('/products/:id/delete', async (req, res, next) => {
     const imgs = await query('usp_Product_Manage', { Action: 'GET_IMAGES', ProductId: toInt(req.params.id) });
     await execProc('usp_Product_Manage', { Action: 'DELETE', ProductId: toInt(req.params.id) });
     imgs.forEach((im) => removeByWebPath(im.FilePath));
+    clearCache();
     req.flash('success', 'Product deleted');
     res.redirect('/admin/products');
   } catch (err) { next(err); }
@@ -226,6 +305,7 @@ router.post('/products/:id/images', uploader('products').array('images', 10), as
         IsPrimary: i === 0 && toBit(req.body.makePrimary) ? 1 : 0, DisplayOrder: i,
       });
     }
+    clearCache();
     req.flash('success', `${files.length} image(s) uploaded`);
     res.redirect(`/admin/products/${productId}/edit`);
   } catch (err) { next(err); }
@@ -235,6 +315,7 @@ router.post('/products/images/:imageId/primary', async (req, res, next) => {
   try {
     const img = await queryOne('usp_Product_Manage', { Action: 'GET_IMAGE_BY_ID', ImageId: toInt(req.params.imageId) });
     await execProc('usp_Product_Manage', { Action: 'SET_PRIMARY_IMAGE', ImageId: toInt(req.params.imageId) });
+    clearCache();
     res.redirect(`/admin/products/${img.ProductId}/edit`);
   } catch (err) { next(err); }
 });
@@ -244,6 +325,7 @@ router.post('/products/images/:imageId/delete', async (req, res, next) => {
     const img = await queryOne('usp_Product_Manage', { Action: 'GET_IMAGE_BY_ID', ImageId: toInt(req.params.imageId) });
     await execProc('usp_Product_Manage', { Action: 'DELETE_IMAGE', ImageId: toInt(req.params.imageId) });
     if (img) removeByWebPath(img.FilePath);
+    clearCache();
     res.redirect(`/admin/products/${img ? img.ProductId : ''}/edit`);
   } catch (err) { next(err); }
 });

@@ -6,6 +6,35 @@ const router = express.Router();
 const { query, queryOne, execProc } = require('../db');
 const { loadSettings, nullIfEmpty, cache } = require('../utils/helpers');
 
+function buildNavCatalog(categories, subcategories, products) {
+  const productsBySubcategory = new Map();
+  for (const product of products) {
+    if (!productsBySubcategory.has(product.SubcategoryId)) productsBySubcategory.set(product.SubcategoryId, []);
+    productsBySubcategory.get(product.SubcategoryId).push(product);
+  }
+
+  const subcategoriesByCategory = new Map();
+  for (const subcategory of subcategories) {
+    if (!subcategoriesByCategory.has(subcategory.CategoryId)) subcategoriesByCategory.set(subcategory.CategoryId, []);
+    const subcategoryProducts = productsBySubcategory.get(subcategory.SubcategoryId) || [];
+    subcategoriesByCategory.get(subcategory.CategoryId).push({
+      ...subcategory,
+      ProductCount: subcategoryProducts.length,
+      products: subcategoryProducts,
+    });
+  }
+
+  return categories.map((category) => {
+    const categorySubcategories = subcategoriesByCategory.get(category.CategoryId) || [];
+    return {
+      ...category,
+      SubcategoryCount: categorySubcategories.length,
+      ProductCount: categorySubcategories.reduce((total, subcategory) => total + subcategory.ProductCount, 0),
+      subcategories: categorySubcategories,
+    };
+  });
+}
+
 // Load settings + footer nav for every public page
 router.use(async (req, res, next) => {
   try {
@@ -20,27 +49,25 @@ router.use(async (req, res, next) => {
     }
     res.locals.navIndustries = cache.navIndustries;
 
-    if (!cache.navProducts) {
-      cache.navProducts = await query('usp_Product_Manage', { Action: 'GET_ALL', IncludeInactive: 0 });
+    if (!cache.navSubcategories) {
+      cache.navSubcategories = await query('usp_Subcategory_Manage', { Action: 'GET_ALL', IncludeInactive: 0 });
     }
-    res.locals.navProducts = cache.navProducts;
+    res.locals.navSubcategories = cache.navSubcategories;
+
+    // Product navigation must reflect deletes across every live app instance.
+    // Do not keep it in process-local memory indefinitely.
+    const navProducts = await query('usp_Product_Manage', { Action: 'GET_ALL', IncludeInactive: 0 });
+    res.locals.navProducts = navProducts;
+    res.locals.navCatalog = buildNavCatalog(cache.navCategories, cache.navSubcategories, navProducts);
 
     res.locals.activePath = req.path;
     next();
   } catch (err) { next(err); }
 });
 
-/* ---------------- Home (full HTML cache) ---------------- */
-const HOME_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
-
+/* ---------------- Home ---------------- */
 router.get('/', async (req, res, next) => {
   try {
-    const now = Date.now();
-    if (cache.homeHtml && (now - cache.homeHtmlTime) < HOME_CACHE_TTL) {
-      // Serve pre-rendered HTML directly — 0 DB calls, 0 template render
-      return res.send(cache.homeHtml);
-    }
-
     const [featured, categories, industries, stats, blogs, testimonials, clientLogos] = await Promise.all([
       query('usp_Product_Manage', { Action: 'GET_ALL', FeaturedOnly: 1, Top: 6 }),
       query('usp_Category_Manage', { Action: 'GET_ALL', IncludeInactive: 0 }),
@@ -51,18 +78,11 @@ router.get('/', async (req, res, next) => {
       query('usp_ClientLogo_Manage', { Action: 'GET_ALL', IncludeInactive: 0 }),
     ]);
 
-    // Render to string, cache it, then send
-    const app = req.app;
-    app.render('public/index', {
+    res.render('public/index', {
       ...res.locals,
       title: 'INHYMA Solutions LLP — Industrial Packaging & Automation',
       metaDescription: 'INHYMA Solutions LLP is India\'s leading industrial hyper market, providing innovative packaging machinery, material handling equipment, and factory automation systems.',
       featured, categories, industries, stats, blogs, testimonials, clientLogos,
-    }, (err, html) => {
-      if (err) return next(err);
-      cache.homeHtml = html;
-      cache.homeHtmlTime = Date.now();
-      res.send(html);
     });
   } catch (err) { next(err); }
 });
@@ -70,15 +90,50 @@ router.get('/', async (req, res, next) => {
 /* ---------------- Products ---------------- */
 router.get('/products', async (req, res, next) => {
   try {
-    const categorySlug = nullIfEmpty(req.query.category);
+    let categorySlug = nullIfEmpty(req.query.category);
+    const subcategorySlug = nullIfEmpty(req.query.subcategory);
     const search = nullIfEmpty(req.query.q);
     const page = parseInt(req.query.page, 10) || 1;
     const limit = 12;
 
-    const [allProducts, categories] = await Promise.all([
-      query('usp_Product_Manage', { Action: 'GET_ALL', CategorySlug: categorySlug, Search: search, IncludeInactive: 0 }),
+    const [categories, allSubcategories] = await Promise.all([
       query('usp_Category_Manage', { Action: 'GET_ALL', IncludeInactive: 0 }),
+      query('usp_Subcategory_Manage', { Action: 'GET_ALL', IncludeInactive: 0 }),
     ]);
+
+    let activeCategoryItem = categorySlug
+      ? categories.find((category) => category.Slug === categorySlug)
+      : null;
+    let activeSubcategoryItem = null;
+
+    if (subcategorySlug) {
+      activeSubcategoryItem = allSubcategories.find((subcategory) =>
+        subcategory.Slug === subcategorySlug
+        && (!activeCategoryItem || subcategory.CategoryId === activeCategoryItem.CategoryId));
+
+      if (activeSubcategoryItem && !activeCategoryItem) {
+        activeCategoryItem = categories.find((category) => category.CategoryId === activeSubcategoryItem.CategoryId);
+        categorySlug = activeCategoryItem ? activeCategoryItem.Slug : null;
+      }
+    }
+
+    if ((categorySlug && !activeCategoryItem) || (subcategorySlug && !activeSubcategoryItem)) {
+      return res.status(404).render('public/404', { title: 'Product Category Not Found' });
+    }
+
+    const subcategories = activeCategoryItem
+      ? allSubcategories.filter((subcategory) => subcategory.CategoryId === activeCategoryItem.CategoryId)
+      : [];
+    const hasProductFilters = Boolean(categorySlug || subcategorySlug || search);
+    const allProducts = hasProductFilters
+      ? await query('usp_Product_Manage', {
+        Action: 'GET_ALL',
+        CategorySlug: categorySlug,
+        SubcategorySlug: subcategorySlug,
+        Search: search,
+        IncludeInactive: 0,
+      })
+      : res.locals.navProducts;
 
     const totalProducts = allProducts.length;
     const totalPages = Math.ceil(totalProducts / limit);
@@ -86,12 +141,45 @@ router.get('/products', async (req, res, next) => {
     const offset = (currentPage - 1) * limit;
     const products = allProducts.slice(offset, offset + limit);
 
+    let catalogTitle = 'Our Products';
+    let catalogSubtitle = 'Explore our full range of industrial packaging and automation equipment.';
+    let breadcrumbs = [{ label: 'Products' }];
+
+    if (activeCategoryItem) {
+      catalogTitle = `${activeCategoryItem.Name} Products`;
+      catalogSubtitle = `Browse all products in ${activeCategoryItem.Name}.`;
+      breadcrumbs = [{ label: 'Products', url: '/products' }, { label: activeCategoryItem.Name }];
+    }
+
+    if (activeSubcategoryItem) {
+      catalogTitle = activeSubcategoryItem.Name;
+      catalogSubtitle = `Browse products in ${activeSubcategoryItem.Name} under ${activeCategoryItem.Name}.`;
+      breadcrumbs = [
+        { label: 'Products', url: '/products' },
+        { label: activeCategoryItem.Name, url: `/products?category=${encodeURIComponent(activeCategoryItem.Slug)}` },
+        { label: activeSubcategoryItem.Name },
+      ];
+    }
+
+    if (search) {
+      catalogTitle = 'Product Search';
+      catalogSubtitle = `${totalProducts} product${totalProducts === 1 ? '' : 's'} found for "${search}".`;
+      breadcrumbs = [{ label: 'Products', url: '/products' }, { label: 'Search Results' }];
+    }
+
     res.render('public/products', {
-      title: 'Industrial Packaging Machinery & Equipment',
+      title: `${catalogTitle} | Industrial Packaging Machinery & Equipment`,
       metaDescription: 'Browse our comprehensive catalog of high-performance packaging machines, filling systems, coding & marking systems, and end-of-line packaging automation.',
       products,
       categories,
+      subcategories,
+      catalogTitle,
+      catalogSubtitle,
+      breadcrumbs,
       activeCategory: categorySlug,
+      activeSubcategory: subcategorySlug,
+      activeCategoryItem,
+      activeSubcategoryItem,
       search,
       currentPage,
       totalPages,

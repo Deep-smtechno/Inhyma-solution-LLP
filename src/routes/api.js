@@ -11,6 +11,7 @@ router.get('/products', async (req, res, next) => {
     const products = await query('usp_Product_Manage', {
       Action: 'GET_ALL',
       CategorySlug: nullIfEmpty(req.query.category),
+      SubcategorySlug: nullIfEmpty(req.query.subcategory),
       Search: nullIfEmpty(req.query.q),
       IncludeInactive: 0,
     });
@@ -21,6 +22,19 @@ router.get('/products', async (req, res, next) => {
 router.get('/categories', async (req, res, next) => {
   try {
     res.json({ ok: true, categories: await query('usp_Category_Manage', { Action: 'GET_ALL', IncludeInactive: 0 }) });
+  } catch (err) { next(err); }
+});
+
+router.get('/subcategories', async (req, res, next) => {
+  try {
+    res.json({
+      ok: true,
+      subcategories: await query('usp_Subcategory_Manage', {
+        Action: 'GET_ALL',
+        CategorySlug: nullIfEmpty(req.query.category),
+        IncludeInactive: 0,
+      }),
+    });
   } catch (err) { next(err); }
 });
 

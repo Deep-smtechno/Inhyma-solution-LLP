@@ -35,4 +35,26 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
+
+  const categoryField = document.getElementById('productCategory');
+  const subcategoryField = document.getElementById('productSubcategory');
+  if (categoryField && subcategoryField) {
+    const options = Array.from(subcategoryField.options).slice(1);
+    const filterSubcategories = () => {
+      const categoryId = categoryField.value;
+      const selectedOption = subcategoryField.options[subcategoryField.selectedIndex];
+
+      options.forEach((option) => {
+        option.hidden = !categoryId || option.dataset.categoryId !== categoryId;
+      });
+
+      if (selectedOption && selectedOption.value && selectedOption.hidden) {
+        subcategoryField.value = '';
+      }
+      subcategoryField.disabled = !categoryId;
+    };
+
+    categoryField.addEventListener('change', filterSubcategories);
+    filterSubcategories();
+  }
 });

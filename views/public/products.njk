@@ -2,98 +2,126 @@
 {% from "public/_macros.njk" import banner, productCard %}
 
 {% block content %}
-{{ banner('Our Products', 'Explore our full range of industrial packaging and automation equipment.', [{label:'Products'}]) }}
+{{ banner(catalogTitle, catalogSubtitle, breadcrumbs) }}
 
 <section class="section">
   <div class="container container--wide">
     <div class="products-layout">
-      <!-- Sidebar -->
       <aside class="products-sidebar">
         <h3 class="products-sidebar__title">Categories</h3>
         <ul class="products-sidebar__list">
           <li class="products-sidebar__item">
-            <a href="/products" class="products-sidebar__link {{ 'active' if not activeCategory }}">
+            <a href="/products" class="products-sidebar__link {{ 'active' if not activeCategory and not activeSubcategory }}">
               All Products
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
             </a>
           </li>
-          {% for c in categories %}
-          <li class="products-sidebar__item">
-            <a href="/products?category={{ c.Slug }}" class="products-sidebar__link {{ 'active' if activeCategory == c.Slug }}">
-              {{ c.Name }}
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          {% for c in navCatalog %}
+          <li class="products-sidebar__item {{ 'has-children' if c.subcategories.length }}">
+            <a href="/products?category={{ c.Slug | urlencode }}" class="products-sidebar__link {{ 'active' if activeCategory == c.Slug }}">
+              <span>{{ c.Name }}</span>
+              {% if c.subcategories.length %}<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>{% endif %}
             </a>
-            
+
+            {% if c.subcategories.length %}
             <div class="products-sidebar__submenu">
-              <div class="products-sidebar__submenu-inner">
-                <div class="products-sidebar__submenu-list">
-                  {% for prod in navProducts %}
-                    {% if prod.CategoryId == c.CategoryId %}
-                      <a href="/products/{{ prod.Slug }}" class="products-sidebar__submenu-link">{{ prod.Name }}</a>
+              <div class="products-sidebar__submenu-list">
+                {% for s in c.subcategories %}
+                  <div class="products-sidebar__subcategory {{ 'has-products' if s.products.length }}">
+                    <a href="/products?category={{ c.Slug | urlencode }}&subcategory={{ s.Slug | urlencode }}" class="products-sidebar__submenu-link {{ 'active' if activeCategory == c.Slug and activeSubcategory == s.Slug }}">
+                      <span>{{ s.Name }}</span>
+                      {% if s.products.length %}<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>{% endif %}
+                    </a>
+
+                    {% if s.products.length %}
+                    <div class="products-sidebar__product-menu">
+                      {% for product in s.products %}
+                        <a href="/products/{{ product.Slug }}" class="products-sidebar__product-link">{{ product.Name }}</a>
+                      {% endfor %}
+                    </div>
                     {% endif %}
-                  {% endfor %}
-                </div>
+                  </div>
+                {% endfor %}
               </div>
             </div>
+            {% endif %}
           </li>
           {% endfor %}
         </ul>
       </aside>
 
-      <!-- Main Content -->
       <main class="products-main">
-        <!-- Mobile-only horizontal category scroller (replaces the sidebar below 900px) -->
         <div class="products-mobile-categories">
           <div class="product-filter__categories">
             <a href="/products" class="product-filter__btn {{ 'active' if not activeCategory }}">All Products</a>
-            {% for c in categories %}
-            <a href="/products?category={{ c.Slug }}" class="product-filter__btn {{ 'active' if activeCategory == c.Slug }}">{{ c.Name }}</a>
-            {% endfor %}
+            {% for c in categories %}<a href="/products?category={{ c.Slug | urlencode }}" class="product-filter__btn {{ 'active' if activeCategory == c.Slug }}">{{ c.Name }}</a>{% endfor %}
           </div>
+          {% if activeCategoryItem and subcategories.length %}
+          <div class="product-filter__categories product-filter__categories--subcategories">
+            {% for s in subcategories %}<a href="/products?category={{ activeCategory | urlencode }}&subcategory={{ s.Slug | urlencode }}" class="product-filter__btn {{ 'active' if activeSubcategory == s.Slug }}">{{ s.Name }}</a>{% endfor %}
+          </div>
+          {% endif %}
         </div>
 
-        <div class="product-filter" style="margin-bottom: var(--space-6); background: transparent; padding: 0; box-shadow: none;">
-          <form class="product-filter__search" method="get" action="/products" style="margin-left: auto;">
+        <div class="product-filter" style="margin-bottom:var(--space-6);background:transparent;padding:0;box-shadow:none;">
+          <span class="products-result-count">{{ totalProducts }} product{{ '' if totalProducts == 1 else 's' }}</span>
+          <form class="product-filter__search" method="get" action="/products" style="margin-left:auto;">
             {% if activeCategory %}<input type="hidden" name="category" value="{{ activeCategory }}">{% endif %}
+            {% if activeSubcategory %}<input type="hidden" name="subcategory" value="{{ activeSubcategory }}">{% endif %}
             <input type="text" name="q" class="product-filter__input" placeholder="Search products..." value="{{ search or '' }}">
             <button class="btn btn--primary btn--sm" type="submit">Search</button>
           </form>
         </div>
 
         {% if products.length %}
-          <div class="product-grid">
-            {% for p in products %}{{ productCard(p) }}{% endfor %}
-          </div>
+        <div class="product-grid">
+          {% for product in products %}{{ productCard(product) }}{% endfor %}
+        </div>
 
-          {% if totalPages > 1 %}
-          <div class="pagination">
-            {% if currentPage > 1 %}
-              <a href="?{% if activeCategory %}category={{ activeCategory }}&{% endif %}{% if search %}q={{ search }}&{% endif %}page={{ currentPage - 1 }}" class="pagination__btn">← Prev</a>
+        {% if totalPages > 1 %}
+        {% set pageStart = currentPage - 1 %}
+        {% set pageEnd = currentPage + 1 %}
+        {% if totalPages <= 3 %}
+          {% set pageStart = 1 %}
+          {% set pageEnd = totalPages %}
+        {% elif currentPage == 1 %}
+          {% set pageStart = 1 %}
+          {% set pageEnd = 3 %}
+        {% elif currentPage == totalPages %}
+          {% set pageStart = totalPages - 2 %}
+          {% set pageEnd = totalPages %}
+        {% endif %}
+
+        <div class="pagination" aria-label="Product pagination">
+          {% if currentPage > 1 %}<a href="?{% if activeCategory %}category={{ activeCategory | urlencode }}&{% endif %}{% if activeSubcategory %}subcategory={{ activeSubcategory | urlencode }}&{% endif %}{% if search %}q={{ search | urlencode }}&{% endif %}page={{ currentPage - 1 }}" class="pagination__btn">← Prev</a>{% else %}<span class="pagination__btn disabled" aria-disabled="true">← Prev</span>{% endif %}
+
+          {% for pageNumber in range(pageStart, pageEnd + 1) %}
+            {% if pageNumber == currentPage %}
+              <span class="pagination__btn active" aria-current="page">{{ pageNumber }}</span>
             {% else %}
-              <span class="pagination__btn disabled">← Prev</span>
+              <a href="?{% if activeCategory %}category={{ activeCategory | urlencode }}&{% endif %}{% if activeSubcategory %}subcategory={{ activeSubcategory | urlencode }}&{% endif %}{% if search %}q={{ search | urlencode }}&{% endif %}page={{ pageNumber }}" class="pagination__btn">{{ pageNumber }}</a>
             {% endif %}
+          {% endfor %}
 
-            {% for p in range(1, totalPages + 1) %}
-              {% if p == currentPage %}
-                <span class="pagination__btn active">{{ p }}</span>
-              {% else %}
-                <a href="?{% if activeCategory %}category={{ activeCategory }}&{% endif %}{% if search %}q={{ search }}&{% endif %}page={{ p }}" class="pagination__btn">{{ p }}</a>
-              {% endif %}
-            {% endfor %}
+          {% if currentPage < totalPages %}<a href="?{% if activeCategory %}category={{ activeCategory | urlencode }}&{% endif %}{% if activeSubcategory %}subcategory={{ activeSubcategory | urlencode }}&{% endif %}{% if search %}q={{ search | urlencode }}&{% endif %}page={{ currentPage + 1 }}" class="pagination__btn">Next →</a>{% else %}<span class="pagination__btn disabled" aria-disabled="true">Next →</span>{% endif %}
 
-            {% if currentPage < totalPages %}
-              <a href="?{% if activeCategory %}category={{ activeCategory }}&{% endif %}{% if search %}q={{ search }}&{% endif %}page={{ currentPage + 1 }}" class="pagination__btn">Next →</a>
-            {% else %}
-              <span class="pagination__btn disabled">Next →</span>
-            {% endif %}
-          </div>
-          {% endif %}
+          <form class="pagination__jump" action="/products" method="get">
+            {% if activeCategory %}<input type="hidden" name="category" value="{{ activeCategory }}">{% endif %}
+            {% if activeSubcategory %}<input type="hidden" name="subcategory" value="{{ activeSubcategory }}">{% endif %}
+            {% if search %}<input type="hidden" name="q" value="{{ search }}">{% endif %}
+            <label class="pagination__jump-label" for="product-page-jump">Jump to page</label>
+            <input class="pagination__jump-input" id="product-page-jump" type="number" name="page" value="{{ currentPage }}" min="1" max="{{ totalPages }}" inputmode="numeric" required>
+            <span class="pagination__jump-total">of {{ totalPages }}</span>
+            <button class="pagination__jump-btn" type="submit">Go</button>
+          </form>
+        </div>
+        {% endif %}
         {% else %}
-          <div class="text-center" style="padding:var(--space-16) 0;">
-            <h3>No products found</h3>
-            <p style="color:var(--color-gray-500);">Try a different category or search term.</p>
-            <a href="/products" class="btn btn--primary">View All Products</a>
-          </div>
+        <div class="text-center" style="padding:var(--space-16) 0;">
+          <h3>No products found</h3>
+          <p style="color:var(--color-gray-500);">Try another category, subcategory, or search term.</p>
+          <a href="/products" class="btn btn--primary">View All Products</a>
+        </div>
         {% endif %}
       </main>
     </div>
@@ -103,16 +131,15 @@
 
 {% block scripts %}
 <script>
-document.addEventListener("DOMContentLoaded", function() {
-  const container = document.querySelector('.product-filter__categories');
-  if (container) {
-    container.addEventListener('wheel', function(e) {
-      if (e.deltaY !== 0) {
-        e.preventDefault();
-        container.scrollLeft += e.deltaY * 1.5; // multiplier for comfortable scroll speed
+document.addEventListener('DOMContentLoaded', function () {
+  document.querySelectorAll('.product-filter__categories').forEach(function (container) {
+    container.addEventListener('wheel', function (event) {
+      if (event.deltaY !== 0) {
+        event.preventDefault();
+        container.scrollLeft += event.deltaY * 1.5;
       }
     });
-  }
+  });
 });
 </script>
 {% endblock %}

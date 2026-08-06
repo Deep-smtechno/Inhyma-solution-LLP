@@ -2,7 +2,18 @@
 {% from "public/_macros.njk" import banner %}
 
 {% block content %}
-{{ banner(product.Name, null, [{label:'Products', url:'/products'}, {label: product.Name}]) }}
+{% if product.CategoryName and product.SubcategoryName %}
+{{ banner(product.Name, null, [
+  {label:'Products', url:'/products'},
+  {label:product.CategoryName, url:'/products?category=' ~ (product.CategorySlug | urlencode)},
+  {label:product.SubcategoryName, url:'/products?category=' ~ (product.CategorySlug | urlencode) ~ '&subcategory=' ~ (product.SubcategorySlug | urlencode)},
+  {label:product.Name}
+]) }}
+{% elif product.CategoryName %}
+{{ banner(product.Name, null, [{label:'Products', url:'/products'}, {label:product.CategoryName, url:'/products?category=' ~ (product.CategorySlug | urlencode)}, {label:product.Name}]) }}
+{% else %}
+{{ banner(product.Name, null, [{label:'Products', url:'/products'}, {label:product.Name}]) }}
+{% endif %}
 
 <section class="section">
   <div class="container">
@@ -29,7 +40,7 @@
       </div>
 
       <div class="product-detail__info">
-        <span class="product-card__category">{{ product.CategoryLabel or product.CategoryName }}</span>
+        <span class="product-card__category">{{ product.CategoryLabel or product.SubcategoryName or product.CategoryName }}</span>
         <h2 class="product-detail__title" style="margin:var(--space-2) 0;">{{ product.Name }}</h2>
         {% if product.ShortDescription %}<p style="color:var(--color-gray-600);">{{ product.ShortDescription }}</p>{% endif %}
 
@@ -49,7 +60,7 @@
         </table>
         {% endif %}
 
-        {% if product.Description %}<div style="color:var(--color-gray-600);margin-bottom:var(--space-6);">{{ product.Description | safe }}</div>{% endif %}
+        {% if product.Description and not specs.length %}<div style="color:var(--color-gray-600);margin-bottom:var(--space-6);">{{ product.Description | safe }}</div>{% endif %}
 
         {% if applications.length %}
         <h4>Applications</h4>
@@ -80,7 +91,7 @@
           {% if p.Badge %}<span class="product-card__badge">{{ p.Badge }}</span>{% endif %}
         </div>
         <div class="product-card__body">
-          <span class="product-card__category">{{ p.CategoryLabel }}</span>
+          <span class="product-card__category">{{ p.CategoryLabel or p.SubcategoryName or p.CategoryName }}</span>
           <h3 class="product-card__title">{{ p.Name }}</h3>
           <div class="product-card__actions">
             <a href="/products/{{ p.Slug }}" class="btn btn--primary btn--sm w-full">View Details</a>

@@ -102,7 +102,12 @@ BEGIN
                    ORDER BY p.IsFeatured DESC, p.DisplayOrder, pi.IsPrimary DESC, pi.DisplayOrder
                )) AS ImagePath,
                c.DisplayOrder, c.IsActive, c.ShowOnHome,
-               (SELECT COUNT(*) FROM dbo.Products p WHERE p.CategoryId = c.CategoryId) AS ProductCount
+               (SELECT COUNT(*) FROM dbo.Subcategories s
+                WHERE s.CategoryId = c.CategoryId
+                  AND (@IncludeInactive = 1 OR s.IsActive = 1)) AS SubcategoryCount,
+               (SELECT COUNT(*) FROM dbo.Products p
+                WHERE p.CategoryId = c.CategoryId
+                  AND (@IncludeInactive = 1 OR p.IsActive = 1)) AS ProductCount
         FROM dbo.Categories c
         WHERE (@IncludeInactive = 1 OR c.IsActive = 1)
         ORDER BY c.DisplayOrder, c.Name;
@@ -136,7 +141,85 @@ BEGIN
     END
     ELSE IF @Action = 'DELETE'
     BEGIN
+        UPDATE dbo.Products SET SubcategoryId = NULL WHERE CategoryId = @CategoryId;
+        DELETE FROM dbo.Subcategories WHERE CategoryId = @CategoryId;
         DELETE FROM dbo.Categories WHERE CategoryId = @CategoryId;
+    END
+END
+GO
+
+/* ============================================================
+   SUBCATEGORIES
+   ============================================================ */
+CREATE OR ALTER PROCEDURE dbo.usp_Subcategory_Manage
+    @Action          VARCHAR(20), -- 'GET_ALL', 'GET_BY_ID', 'CREATE', 'UPDATE', 'DELETE'
+    @SubcategoryId   INT = NULL,
+    @CategoryId      INT = NULL,
+    @CategorySlug    NVARCHAR(140) = NULL,
+    @Name            NVARCHAR(120) = NULL,
+    @Slug            NVARCHAR(140) = NULL,
+    @Description     NVARCHAR(500) = NULL,
+    @ImagePath       NVARCHAR(400) = NULL,
+    @DisplayOrder    INT = 0,
+    @IsActive        BIT = 1,
+    @IncludeInactive BIT = 1
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    IF @Action = 'GET_ALL'
+    BEGIN
+        SELECT s.SubcategoryId, s.CategoryId, s.Name, s.Slug, s.Description,
+               COALESCE(s.ImagePath, (
+                   SELECT TOP 1 pi.FilePath
+                   FROM dbo.Products p
+                   JOIN dbo.ProductImages pi ON pi.ProductId = p.ProductId
+                   WHERE p.SubcategoryId = s.SubcategoryId AND p.IsActive = 1
+                   ORDER BY p.IsFeatured DESC, p.DisplayOrder, pi.IsPrimary DESC, pi.DisplayOrder
+               )) AS ImagePath,
+               s.DisplayOrder, s.IsActive,
+               c.Name AS CategoryName, c.Slug AS CategorySlug,
+               (SELECT COUNT(*) FROM dbo.Products p WHERE p.SubcategoryId = s.SubcategoryId) AS ProductCount
+        FROM dbo.Subcategories s
+        JOIN dbo.Categories c ON c.CategoryId = s.CategoryId
+        WHERE (@IncludeInactive = 1 OR (s.IsActive = 1 AND c.IsActive = 1))
+          AND (@CategoryId IS NULL OR s.CategoryId = @CategoryId)
+          AND (@CategorySlug IS NULL OR c.Slug = @CategorySlug)
+        ORDER BY c.DisplayOrder, c.Name, s.DisplayOrder, s.Name;
+    END
+    ELSE IF @Action = 'GET_BY_ID'
+    BEGIN
+        SELECT s.SubcategoryId, s.CategoryId, s.Name, s.Slug, s.Description,
+               s.ImagePath, s.DisplayOrder, s.IsActive,
+               c.Name AS CategoryName, c.Slug AS CategorySlug
+        FROM dbo.Subcategories s
+        JOIN dbo.Categories c ON c.CategoryId = s.CategoryId
+        WHERE s.SubcategoryId = @SubcategoryId;
+    END
+    ELSE IF @Action = 'CREATE'
+    BEGIN
+        INSERT INTO dbo.Subcategories (CategoryId, Name, Slug, Description, ImagePath, DisplayOrder, IsActive)
+        VALUES (@CategoryId, @Name, @Slug, @Description, @ImagePath, @DisplayOrder, @IsActive);
+        SELECT SCOPE_IDENTITY() AS SubcategoryId;
+    END
+    ELSE IF @Action = 'UPDATE'
+    BEGIN
+        UPDATE dbo.Subcategories
+        SET CategoryId = @CategoryId, Name = @Name, Slug = @Slug, Description = @Description,
+            ImagePath = COALESCE(@ImagePath, ImagePath), DisplayOrder = @DisplayOrder,
+            IsActive = @IsActive, UpdatedAt = SYSUTCDATETIME()
+        WHERE SubcategoryId = @SubcategoryId;
+
+        UPDATE dbo.Products
+        SET CategoryId = @CategoryId, UpdatedAt = SYSUTCDATETIME()
+        WHERE SubcategoryId = @SubcategoryId;
+    END
+    ELSE IF @Action = 'DELETE'
+    BEGIN
+        IF EXISTS (SELECT 1 FROM dbo.Products WHERE SubcategoryId = @SubcategoryId)
+            THROW 50001, 'Move or delete the products in this subcategory before deleting it.', 1;
+
+        DELETE FROM dbo.Subcategories WHERE SubcategoryId = @SubcategoryId;
     END
 END
 GO
@@ -148,6 +231,7 @@ CREATE OR ALTER PROCEDURE dbo.usp_Product_Manage
     @Action           VARCHAR(30), -- 'GET_ALL', 'GET_BY_ID', 'GET_BY_SLUG', 'GET_RELATED', 'CREATE', 'UPDATE', 'DELETE', 'CREATE_FEATURE', 'DELETE_FEATURES', 'CREATE_SPEC', 'DELETE_SPECS', 'CREATE_APP', 'DELETE_APPS', 'CREATE_IMAGE', 'GET_IMAGES', 'GET_IMAGE_BY_ID', 'DELETE_IMAGE', 'SET_PRIMARY_IMAGE'
     @ProductId        INT = NULL,
     @CategoryId       INT = NULL,
+    @SubcategoryId    INT = NULL,
     @Name             NVARCHAR(200) = NULL,
     @Slug             NVARCHAR(220) = NULL,
     @CategoryLabel    NVARCHAR(120) = NULL,
@@ -158,6 +242,7 @@ CREATE OR ALTER PROCEDURE dbo.usp_Product_Manage
     @IsActive         BIT = NULL,
     @DisplayOrder     INT = 0,
     @CategorySlug     NVARCHAR(140) = NULL,
+    @SubcategorySlug  NVARCHAR(140) = NULL,
     @Search           NVARCHAR(200) = NULL,
     @IncludeInactive  BIT = 0,
     @FeaturedOnly     BIT = 0,
@@ -179,32 +264,68 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
+    DECLARE @EffectiveCategoryId INT = @CategoryId;
+    DECLARE @EffectiveSubcategoryId INT = @SubcategoryId;
+
+    IF @Action IN ('CREATE', 'UPDATE')
+    BEGIN
+        IF @EffectiveSubcategoryId IS NOT NULL
+        BEGIN
+            SELECT @EffectiveCategoryId = CategoryId
+            FROM dbo.Subcategories
+            WHERE SubcategoryId = @EffectiveSubcategoryId;
+        END
+        ELSE IF @EffectiveCategoryId IS NOT NULL
+        BEGIN
+            SELECT @EffectiveSubcategoryId = SubcategoryId
+            FROM dbo.Subcategories
+            WHERE CategoryId = @EffectiveCategoryId AND Slug = 'general-products';
+
+            IF @EffectiveSubcategoryId IS NULL
+            BEGIN
+                INSERT INTO dbo.Subcategories
+                    (CategoryId, Name, Slug, Description, DisplayOrder, IsActive)
+                VALUES
+                    (@EffectiveCategoryId, 'General Products', 'general-products',
+                     'Products awaiting assignment to a specific subcategory.', 9999, 1);
+                SET @EffectiveSubcategoryId = SCOPE_IDENTITY();
+            END
+        END
+    END
+
     IF @Action = 'GET_ALL'
     BEGIN
         SELECT TOP (COALESCE(@Top, 100000))
             p.ProductId, p.Name, p.Slug, p.CategoryLabel, p.ShortDescription, p.Badge,
-            p.IsFeatured, p.IsActive, p.DisplayOrder, p.CategoryId,
+            p.IsFeatured, p.IsActive, p.DisplayOrder, p.CategoryId, p.SubcategoryId,
             c.Name AS CategoryName, c.Slug AS CategorySlug,
+            s.Name AS SubcategoryName, s.Slug AS SubcategorySlug,
             (SELECT TOP 1 pi.FilePath FROM dbo.ProductImages pi
                 WHERE pi.ProductId = p.ProductId
                 ORDER BY pi.IsPrimary DESC, pi.DisplayOrder, pi.ImageId) AS PrimaryImage
         FROM dbo.Products p
         LEFT JOIN dbo.Categories c ON c.CategoryId = p.CategoryId
+        LEFT JOIN dbo.Subcategories s ON s.SubcategoryId = p.SubcategoryId
         WHERE (@IncludeInactive = 1 OR p.IsActive = 1)
           AND (@FeaturedOnly = 0 OR p.IsFeatured = 1)
           AND (@CategorySlug IS NULL OR c.Slug = @CategorySlug)
+          AND (@SubcategorySlug IS NULL OR s.Slug = @SubcategorySlug)
           AND (@Search IS NULL OR p.Name LIKE '%' + @Search + '%'
                OR p.ShortDescription LIKE '%' + @Search + '%'
-               OR p.CategoryLabel LIKE '%' + @Search + '%')
+               OR p.CategoryLabel LIKE '%' + @Search + '%'
+               OR c.Name LIKE '%' + @Search + '%'
+               OR s.Name LIKE '%' + @Search + '%')
         ORDER BY p.DisplayOrder, p.Name;
     END
     ELSE IF @Action = 'GET_BY_ID'
     BEGIN
-        SELECT p.ProductId, p.CategoryId, p.Name, p.Slug, p.CategoryLabel, p.ShortDescription,
+        SELECT p.ProductId, p.CategoryId, p.SubcategoryId, p.Name, p.Slug, p.CategoryLabel, p.ShortDescription,
                p.Description, p.Badge, p.IsFeatured, p.IsActive, p.DisplayOrder,
-               c.Name AS CategoryName, c.Slug AS CategorySlug
+               c.Name AS CategoryName, c.Slug AS CategorySlug,
+               s.Name AS SubcategoryName, s.Slug AS SubcategorySlug
         FROM dbo.Products p
         LEFT JOIN dbo.Categories c ON c.CategoryId = p.CategoryId
+        LEFT JOIN dbo.Subcategories s ON s.SubcategoryId = p.SubcategoryId
         WHERE p.ProductId = @ProductId;
 
         SELECT FeatureId, FeatureText, DisplayOrder FROM dbo.ProductFeatures
@@ -230,25 +351,31 @@ BEGIN
     ELSE IF @Action = 'GET_RELATED'
     BEGIN
         DECLARE @RelCategoryId INT = (SELECT CategoryId FROM dbo.Products WHERE ProductId = @ProductId);
+        DECLARE @RelSubcategoryId INT = (SELECT SubcategoryId FROM dbo.Products WHERE ProductId = @ProductId);
         SELECT TOP (COALESCE(@Top, 3))
             p.ProductId, p.Name, p.Slug, p.CategoryLabel, p.Badge,
+            c.Name AS CategoryName, s.Name AS SubcategoryName,
             (SELECT TOP 1 pi.FilePath FROM dbo.ProductImages pi
                 WHERE pi.ProductId = p.ProductId ORDER BY pi.IsPrimary DESC, pi.DisplayOrder) AS PrimaryImage
         FROM dbo.Products p
+        LEFT JOIN dbo.Categories c ON c.CategoryId = p.CategoryId
+        LEFT JOIN dbo.Subcategories s ON s.SubcategoryId = p.SubcategoryId
         WHERE p.IsActive = 1 AND p.ProductId <> @ProductId
-          AND (@RelCategoryId IS NULL OR p.CategoryId = @RelCategoryId)
+          AND ((@RelSubcategoryId IS NOT NULL AND p.SubcategoryId = @RelSubcategoryId)
+               OR (@RelSubcategoryId IS NULL AND (@RelCategoryId IS NULL OR p.CategoryId = @RelCategoryId)))
         ORDER BY p.DisplayOrder, NEWID();
     END
     ELSE IF @Action = 'CREATE'
     BEGIN
-        INSERT INTO dbo.Products (CategoryId, Name, Slug, CategoryLabel, ShortDescription, Description, Badge, IsFeatured, IsActive, DisplayOrder)
-        VALUES (@CategoryId, @Name, @Slug, @CategoryLabel, @ShortDescription, @Description, @Badge, COALESCE(@IsFeatured, 0), COALESCE(@IsActive, 1), @DisplayOrder);
+        INSERT INTO dbo.Products (CategoryId, SubcategoryId, Name, Slug, CategoryLabel, ShortDescription, Description, Badge, IsFeatured, IsActive, DisplayOrder)
+        VALUES (@EffectiveCategoryId, @EffectiveSubcategoryId, @Name, @Slug, @CategoryLabel, @ShortDescription, @Description, @Badge, COALESCE(@IsFeatured, 0), COALESCE(@IsActive, 1), @DisplayOrder);
         SELECT SCOPE_IDENTITY() AS ProductId;
     END
     ELSE IF @Action = 'UPDATE'
     BEGIN
         UPDATE dbo.Products
-        SET CategoryId = @CategoryId, Name = @Name, Slug = @Slug, CategoryLabel = @CategoryLabel,
+        SET CategoryId = @EffectiveCategoryId, SubcategoryId = @EffectiveSubcategoryId,
+            Name = @Name, Slug = @Slug, CategoryLabel = @CategoryLabel,
             ShortDescription = @ShortDescription, Description = @Description, Badge = @Badge,
             IsFeatured = COALESCE(@IsFeatured, IsFeatured), IsActive = COALESCE(@IsActive, IsActive), DisplayOrder = @DisplayOrder,
             UpdatedAt = SYSUTCDATETIME()

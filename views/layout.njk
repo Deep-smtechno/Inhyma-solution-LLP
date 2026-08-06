@@ -6,7 +6,7 @@
   <meta name="description" content="{{ metaDescription or 'INHYMA Solutions LLP — India\'s leading industrial packaging & automation solutions provider.' }}">
   <title>{{ title }}{% if title %} — {% endif %}{{ settings.company_name or 'INHYMA Solutions LLP' }}</title>
   <link rel="icon" type="image/png" href="/logo.png">
-  <link rel="stylesheet" href="/index.css?v=2.5">
+  <link rel="stylesheet" href="/index.css?v=3.1">
   
   <!-- SEO & Social Meta Tags -->
   <meta name="robots" content="index, follow">
@@ -37,9 +37,35 @@
         
         <div class="nav-dropdown">
           <a href="/products" class="header__nav-link {{ 'active' if '/products' in activePath }}">Products</a>
-          <div class="nav-dropdown-menu">
-            {% for cat in navCategories %}
-              <a href="/products?category={{ cat.Slug }}" class="nav-dropdown-item" title="{{ cat.Name }}">{{ cat.Name }}</a>
+          <div class="nav-dropdown-menu nav-catalog-menu">
+            {% for cat in navCatalog %}
+              <div class="nav-catalog-category">
+                <a href="/products?category={{ cat.Slug | urlencode }}" class="nav-dropdown-item nav-catalog-trigger" title="{{ cat.Name }}">
+                  <span>{{ cat.Name }}</span>
+                  {% if cat.subcategories.length %}<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>{% endif %}
+                </a>
+
+                {% if cat.subcategories.length %}
+                <div class="nav-catalog-submenu nav-catalog-subcategories">
+                  {% for subcategory in cat.subcategories %}
+                    <div class="nav-catalog-subcategory">
+                      <a href="/products?category={{ cat.Slug | urlencode }}&subcategory={{ subcategory.Slug | urlencode }}" class="nav-catalog-trigger">
+                        <span>{{ subcategory.Name }}</span>
+                        {% if subcategory.products.length %}<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>{% endif %}
+                      </a>
+
+                      {% if subcategory.products.length %}
+                      <div class="nav-catalog-submenu nav-catalog-products">
+                        {% for product in subcategory.products %}
+                          <a href="/products/{{ product.Slug }}" class="nav-catalog-product">{{ product.Name }}</a>
+                        {% endfor %}
+                      </div>
+                      {% endif %}
+                    </div>
+                  {% endfor %}
+                </div>
+                {% endif %}
+              </div>
             {% endfor %}
             <a href="/products" class="nav-dropdown-all">
               View all products

@@ -139,8 +139,9 @@ startServer(PORT);
     const { query } = require('./db');
     await loadSettings(); // pre-cache settings
     cache.navCategories = await query('usp_Category_Manage', { Action: 'GET_ALL', IncludeInactive: 0 });
+    cache.navSubcategories = await query('usp_Subcategory_Manage', { Action: 'GET_ALL', IncludeInactive: 0 });
     cache.navIndustries = await query('usp_Industry_Manage', { Action: 'GET_ALL', IncludeInactive: 0 });
-    console.log('✓ Caches pre-warmed (settings, categories, industries)');
+    console.log('✓ Caches pre-warmed (settings, categories, subcategories, industries)');
   } catch (e) {
     console.warn('⚠ Cache pre-warm failed (will lazy-load):', e.message);
   }

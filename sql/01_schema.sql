@@ -53,6 +53,29 @@ END
 GO
 
 /* ------------------------------------------------------------
+   Product Subcategories
+   ------------------------------------------------------------ */
+IF OBJECT_ID('dbo.Subcategories', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.Subcategories (
+        SubcategoryId INT IDENTITY(1,1) PRIMARY KEY,
+        CategoryId    INT           NOT NULL,
+        Name          NVARCHAR(120) NOT NULL,
+        Slug          NVARCHAR(140) NOT NULL,
+        Description   NVARCHAR(500) NULL,
+        ImagePath     NVARCHAR(400) NULL,
+        DisplayOrder  INT           NOT NULL CONSTRAINT DF_Subcategories_Order DEFAULT(0),
+        IsActive      BIT           NOT NULL CONSTRAINT DF_Subcategories_IsActive DEFAULT(1),
+        CreatedAt     DATETIME2     NOT NULL CONSTRAINT DF_Subcategories_CreatedAt DEFAULT(SYSUTCDATETIME()),
+        UpdatedAt     DATETIME2     NULL,
+        CONSTRAINT UQ_Subcategories_Category_Slug UNIQUE (CategoryId, Slug),
+        CONSTRAINT FK_Subcategories_Categories FOREIGN KEY (CategoryId)
+            REFERENCES dbo.Categories(CategoryId)
+    );
+END
+GO
+
+/* ------------------------------------------------------------
    Products
    ------------------------------------------------------------ */
 IF OBJECT_ID('dbo.Products', 'U') IS NULL
@@ -60,6 +83,7 @@ BEGIN
     CREATE TABLE dbo.Products (
         ProductId        INT IDENTITY(1,1) PRIMARY KEY,
         CategoryId       INT           NULL,
+        SubcategoryId    INT           NULL,
         Name             NVARCHAR(200) NOT NULL,
         Slug             NVARCHAR(220) NOT NULL UNIQUE,
         CategoryLabel    NVARCHAR(120) NULL,   -- e.g. "Packaging Machines" (display text)
@@ -72,9 +96,53 @@ BEGIN
         CreatedAt        DATETIME2     NOT NULL CONSTRAINT DF_Products_CreatedAt DEFAULT(SYSUTCDATETIME()),
         UpdatedAt        DATETIME2     NULL,
         CONSTRAINT FK_Products_Categories FOREIGN KEY (CategoryId)
-            REFERENCES dbo.Categories(CategoryId) ON DELETE SET NULL
+            REFERENCES dbo.Categories(CategoryId) ON DELETE SET NULL,
+        CONSTRAINT FK_Products_Subcategories FOREIGN KEY (SubcategoryId)
+            REFERENCES dbo.Subcategories(SubcategoryId) ON DELETE SET NULL
     );
 END
+GO
+
+/* Upgrade an existing two-level catalog without dropping product data. */
+IF COL_LENGTH('dbo.Products', 'SubcategoryId') IS NULL
+BEGIN
+    ALTER TABLE dbo.Products ADD SubcategoryId INT NULL;
+END
+GO
+
+IF NOT EXISTS (
+    SELECT 1 FROM sys.foreign_keys
+    WHERE name = 'FK_Products_Subcategories'
+      AND parent_object_id = OBJECT_ID('dbo.Products')
+)
+BEGIN
+    ALTER TABLE dbo.Products
+        ADD CONSTRAINT FK_Products_Subcategories FOREIGN KEY (SubcategoryId)
+            REFERENCES dbo.Subcategories(SubcategoryId) ON DELETE SET NULL;
+END
+GO
+
+/* Existing direct products are grouped safely until an admin reorganizes them. */
+INSERT INTO dbo.Subcategories (CategoryId, Name, Slug, Description, DisplayOrder, IsActive)
+SELECT c.CategoryId, 'General Products', 'general-products',
+       'Products awaiting assignment to a specific subcategory.', 9999, 1
+FROM dbo.Categories c
+WHERE EXISTS (
+    SELECT 1 FROM dbo.Products p
+    WHERE p.CategoryId = c.CategoryId AND p.SubcategoryId IS NULL
+)
+AND NOT EXISTS (
+    SELECT 1 FROM dbo.Subcategories s
+    WHERE s.CategoryId = c.CategoryId AND s.Slug = 'general-products'
+);
+GO
+
+UPDATE p
+SET p.SubcategoryId = s.SubcategoryId
+FROM dbo.Products p
+JOIN dbo.Subcategories s
+  ON s.CategoryId = p.CategoryId AND s.Slug = 'general-products'
+WHERE p.SubcategoryId IS NULL;
 GO
 
 /* Product feature chips (e.g. "60 PPM", "SS 304") */

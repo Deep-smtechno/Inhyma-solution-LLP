@@ -9,13 +9,20 @@
         <div class="fg"><label>Name *</label><input type="text" name="name" data-slug-source required value="{{ item.Name }}"></div>
         <div class="fg"><label>Slug</label><input type="text" name="slug" data-slug-target value="{{ item.Slug }}"><div class="hint">Leave blank to auto-generate.</div></div>
 
-        <div class="fg"><label>Category</label>
-          <select name="categoryId">
-            <option value="">— None —</option>
+        <div class="fg"><label>Category *</label>
+          <select name="categoryId" id="productCategory" required>
+            <option value="">— Select Category —</option>
             {% for c in categories %}<option value="{{ c.CategoryId }}" {{ 'selected' if item and item.CategoryId == c.CategoryId }}>{{ c.Name }}</option>{% endfor %}
           </select>
         </div>
-        <div class="fg"><label>Category Label (display text)</label><input type="text" name="categoryLabel" value="{{ item.CategoryLabel }}" placeholder="e.g. Packaging Machines"></div>
+        <div class="fg"><label>Subcategory *</label>
+          <select name="subcategoryId" id="productSubcategory" required>
+            <option value="">— Select Subcategory —</option>
+            {% for s in subcategories %}<option value="{{ s.SubcategoryId }}" data-category-id="{{ s.CategoryId }}" {{ 'selected' if item and item.SubcategoryId == s.SubcategoryId }}>{{ s.Name }}</option>{% endfor %}
+          </select>
+          <div class="hint">Only subcategories from the selected category are shown.</div>
+        </div>
+        <div class="fg"><label>Card Label (optional)</label><input type="text" name="categoryLabel" value="{{ item.CategoryLabel }}" placeholder="Defaults to the subcategory name"></div>
 
         <div class="fg fg--full"><label>Short Description</label><textarea name="shortDescription">{{ item.ShortDescription }}</textarea></div>
         <div class="fg fg--full"><label>Full Description</label><textarea name="description" rows="6">{{ item.Description }}</textarea><div class="hint">HTML allowed.</div></div>
