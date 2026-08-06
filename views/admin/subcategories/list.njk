@@ -3,6 +3,34 @@
 {% block content %}
 <div class="card">
   {{ listTop('All Subcategories', '/admin/subcategories/new', 'Add Subcategory') }}
+  <form class="admin-filters" method="get" action="/admin/subcategories">
+    <div class="admin-filter__field admin-filter__field--search">
+      <label for="subcategoryFilterSearch">Subcategory</label>
+      <input id="subcategoryFilterSearch" type="search" name="q" value="{{ search }}" placeholder="Search subcategory name or slug...">
+    </div>
+    <div class="admin-filter__field">
+      <label for="subcategoryFilterCategory">Category</label>
+      <select id="subcategoryFilterCategory" name="category">
+        <option value="">All categories</option>
+        {% for c in categories %}<option value="{{ c.Slug }}" {{ 'selected' if category == c.Slug }}>{{ c.Name }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="admin-filter__field">
+      <label for="subcategoryFilterStatus">Status</label>
+      <select id="subcategoryFilterStatus" name="status">
+        <option value="">All statuses</option>
+        <option value="active" {{ 'selected' if status == 'active' }}>Active</option>
+        <option value="hidden" {{ 'selected' if status == 'hidden' }}>Hidden</option>
+      </select>
+    </div>
+    <div class="admin-filter__actions">
+      <button class="btn btn-primary" type="submit">Apply filters</button>
+      {% if hasFilters %}<a class="btn btn-outline" href="/admin/subcategories">Clear</a>{% endif %}
+      <a class="btn btn-outline" href="/admin/subcategories/export{% if filterQuery %}?{{ filterQuery }}{% endif %}">Export Excel</a>
+    </div>
+  </form>
+  <div class="admin-filter__summary"><strong>{{ totalSubcategories }}</strong> matching subcategor{{ 'y' if totalSubcategories == 1 else 'ies' }}</div>
+
   {% if items.length %}
   <div class="table-wrap"><table class="data">
     <thead><tr><th>Image</th><th>Name</th><th>Category</th><th>Products</th><th>Order</th><th>Status</th><th></th></tr></thead>
@@ -20,6 +48,7 @@
       {% endfor %}
     </tbody>
   </table></div>
+  {% elseif hasFilters %}<div class="empty">No subcategories match these filters. <a href="/admin/subcategories">Clear filters</a>.</div>
   {% else %}<div class="empty">No subcategories yet. <a href="/admin/subcategories/new">Add one</a>.</div>{% endif %}
 </div>
 {% endblock %}

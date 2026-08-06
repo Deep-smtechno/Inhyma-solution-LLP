@@ -3,19 +3,47 @@
 {% from "admin/_icons.njk" import icon %}
 {% block content %}
 
-<div class="page-toolbar">
-  <div class="seg">
-    <a href="/admin/leads" class="{{ 'active' if not status }}">All</a>
-    <a href="/admin/leads?status=new" class="{{ 'active' if status == 'new' }}">New</a>
-    <a href="/admin/leads?status=contacted" class="{{ 'active' if status == 'contacted' }}">Contacted</a>
-    <a href="/admin/leads?status=quoted" class="{{ 'active' if status == 'quoted' }}">Quoted</a>
-    <a href="/admin/leads?status=closed" class="{{ 'active' if status == 'closed' }}">Closed</a>
-    <a href="/admin/leads?status=lost" class="{{ 'active' if status == 'lost' }}">Lost</a>
-  </div>
-  <span class="muted" style="margin-left:auto;">{{ totalLeads }} lead{{ 's' if totalLeads != 1 }}</span>
-</div>
-
 <div class="card">
+  <div class="card__header"><h2>CRM Leads</h2></div>
+  <form class="admin-filters admin-filters--crm" method="get" action="/admin/leads">
+    <div class="admin-filter__field admin-filter__field--search">
+      <label for="leadFilterSearch">Lead or contact</label>
+      <input id="leadFilterSearch" type="search" name="q" value="{{ search }}" placeholder="Name, company, phone, email...">
+    </div>
+    <div class="admin-filter__field">
+      <label for="leadFilterStatus">Status</label>
+      <select id="leadFilterStatus" name="status">
+        <option value="">All statuses</option>
+        <option value="new" {{ 'selected' if status == 'new' }}>New</option>
+        <option value="contacted" {{ 'selected' if status == 'contacted' }}>Contacted</option>
+        <option value="quoted" {{ 'selected' if status == 'quoted' }}>Quoted</option>
+        <option value="closed" {{ 'selected' if status == 'closed' }}>Closed</option>
+        <option value="lost" {{ 'selected' if status == 'lost' }}>Lost</option>
+      </select>
+    </div>
+    <div class="admin-filter__field">
+      <label for="leadFilterSource">Source</label>
+      <select id="leadFilterSource" name="source">
+        <option value="">All sources</option>
+        {% for sourceOption in sources %}<option value="{{ sourceOption }}" {{ 'selected' if source == sourceOption }}>{{ sourceOption | title }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="admin-filter__field">
+      <label for="leadFilterFrom">Created from</label>
+      <input id="leadFilterFrom" type="date" name="dateFrom" value="{{ dateFrom }}">
+    </div>
+    <div class="admin-filter__field">
+      <label for="leadFilterTo">Created to</label>
+      <input id="leadFilterTo" type="date" name="dateTo" value="{{ dateTo }}">
+    </div>
+    <div class="admin-filter__actions">
+      <button class="btn btn-primary" type="submit">Apply filters</button>
+      {% if hasFilters %}<a class="btn btn-outline" href="/admin/leads">Clear</a>{% endif %}
+      <a class="btn btn-outline" href="/admin/leads/export{% if filterQuery %}?{{ filterQuery }}{% endif %}">Export Excel</a>
+    </div>
+  </form>
+  <div class="admin-filter__summary"><strong>{{ totalLeads }}</strong> matching lead{{ '' if totalLeads == 1 else 's' }}{% if hasFilters %} from {{ allLeadCount }} total{% endif %}</div>
+
   {% if items.length %}
   <div class="table-wrap">
   <table class="data">
@@ -49,7 +77,8 @@
     </tbody>
   </table>
   </div>
-  {{ pagination(currentPage, totalPages, '/admin/leads', status) }}
-  {% else %}<div class="empty">{{ icon('leads') }}<div>No leads{% if status %} with status "{{ status }}"{% endif %} yet.</div></div>{% endif %}
+  {{ pagination(currentPage, totalPages, '/admin/leads', null, filterQuery) }}
+  {% elseif hasFilters %}<div class="empty">{{ icon('leads') }}<div>No leads match these filters. <a href="/admin/leads">Clear filters</a>.</div></div>
+  {% else %}<div class="empty">{{ icon('leads') }}<div>No leads yet.</div></div>{% endif %}
 </div>
 {% endblock %}

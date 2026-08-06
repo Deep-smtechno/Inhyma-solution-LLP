@@ -55,10 +55,10 @@
 </div>
 {% endmacro %}
 
-{% macro pagination(currentPage, totalPages, baseUrl, status) %}
+{% macro pagination(currentPage, totalPages, baseUrl, status, query) %}
 {% if totalPages > 1 %}
 <div class="pagination" style="display:flex;justify-content:center;align-items:center;gap:10px;margin-top:20px;padding:20px 0;border-top:1px solid var(--color-gray-100);">
-  {% set queryStr = ("&status=" + status) if status else "" %}
+  {% set queryStr = ("&" + query) if query else (("&status=" + status) if status else "") %}
   
   {% if currentPage > 1 %}
     <a class="btn btn-outline btn-sm" href="{{ baseUrl }}?page={{ currentPage - 1 }}{{ queryStr }}">Previous</a>

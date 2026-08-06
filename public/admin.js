@@ -57,4 +57,32 @@ document.addEventListener('DOMContentLoaded', () => {
     categoryField.addEventListener('change', filterSubcategories);
     filterSubcategories();
   }
+
+  const filterCategory = document.getElementById('productFilterCategory');
+  const filterSubcategory = document.getElementById('productFilterSubcategory');
+  if (filterCategory && filterSubcategory) {
+    const options = Array.from(filterSubcategory.options).slice(1);
+    const filterOptions = () => {
+      const categorySlug = filterCategory.value;
+      const selectedOption = filterSubcategory.options[filterSubcategory.selectedIndex];
+
+      options.forEach((option) => {
+        option.hidden = Boolean(categorySlug) && option.dataset.categorySlug !== categorySlug;
+      });
+
+      if (selectedOption && selectedOption.value && selectedOption.hidden) {
+        filterSubcategory.value = '';
+      }
+    };
+
+    filterCategory.addEventListener('change', filterOptions);
+    filterSubcategory.addEventListener('change', () => {
+      const selectedOption = filterSubcategory.options[filterSubcategory.selectedIndex];
+      if (!filterCategory.value && selectedOption && selectedOption.value) {
+        filterCategory.value = selectedOption.dataset.categorySlug;
+        filterOptions();
+      }
+    });
+    filterOptions();
+  }
 });

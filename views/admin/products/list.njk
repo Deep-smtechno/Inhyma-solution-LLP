@@ -3,6 +3,33 @@
 {% block content %}
 <div class="card">
   {{ listTop('All Products', '/admin/products/new', 'Add Product') }}
+  <form class="admin-filters" method="get" action="/admin/products">
+    <div class="admin-filter__field admin-filter__field--search">
+      <label for="productFilterSearch">Product</label>
+      <input id="productFilterSearch" type="search" name="q" value="{{ search }}" placeholder="Search product name...">
+    </div>
+    <div class="admin-filter__field">
+      <label for="productFilterCategory">Category</label>
+      <select id="productFilterCategory" name="category">
+        <option value="">All categories</option>
+        {% for c in categories %}<option value="{{ c.Slug }}" {{ 'selected' if category == c.Slug }}>{{ c.Name }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="admin-filter__field">
+      <label for="productFilterSubcategory">Subcategory</label>
+      <select id="productFilterSubcategory" name="subcategory">
+        <option value="">All subcategories</option>
+        {% for s in subcategories %}<option value="{{ s.Slug }}" data-category-slug="{{ s.CategorySlug }}" {{ 'selected' if subcategory == s.Slug }}>{{ s.Name }} - {{ s.CategoryName }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="admin-filter__actions">
+      <button class="btn btn-primary" type="submit">Apply filters</button>
+      {% if hasFilters %}<a class="btn btn-outline" href="/admin/products">Clear</a>{% endif %}
+      <a class="btn btn-outline" href="/admin/products/export{% if filterQuery %}?{{ filterQuery }}{% endif %}">Export Excel</a>
+    </div>
+  </form>
+  <div class="admin-filter__summary"><strong>{{ totalProducts }}</strong> matching product{{ '' if totalProducts == 1 else 's' }}</div>
+
   {% if items.length %}
   <div class="table-wrap"><table class="data">
     <thead><tr><th>Image</th><th>Name</th><th>Category</th><th>Subcategory</th><th>Badge</th><th>Featured</th><th>Status</th><th></th></tr></thead>
@@ -21,7 +48,8 @@
       {% endfor %}
     </tbody>
   </table></div>
-  {{ pagination(currentPage, totalPages, '/admin/products') }}
+  {{ pagination(currentPage, totalPages, '/admin/products', null, filterQuery) }}
+  {% elseif hasFilters %}<div class="empty">No products match these filters. <a href="/admin/products">Clear filters</a>.</div>
   {% else %}<div class="empty">No products yet. <a href="/admin/products/new">Add one</a>.</div>{% endif %}
 </div>
 {% endblock %}

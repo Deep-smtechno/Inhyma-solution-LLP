@@ -228,7 +228,7 @@ GO
    PRODUCTS
    ============================================================ */
 CREATE OR ALTER PROCEDURE dbo.usp_Product_Manage
-    @Action           VARCHAR(30), -- 'GET_ALL', 'GET_BY_ID', 'GET_BY_SLUG', 'GET_RELATED', 'CREATE', 'UPDATE', 'DELETE', 'CREATE_FEATURE', 'DELETE_FEATURES', 'CREATE_SPEC', 'DELETE_SPECS', 'CREATE_APP', 'DELETE_APPS', 'CREATE_IMAGE', 'GET_IMAGES', 'GET_IMAGE_BY_ID', 'DELETE_IMAGE', 'SET_PRIMARY_IMAGE'
+    @Action           VARCHAR(30), -- includes 'GET_ALL', 'GET_EXPORT', CRUD and child collection actions
     @ProductId        INT = NULL,
     @CategoryId       INT = NULL,
     @SubcategoryId    INT = NULL,
@@ -316,6 +316,52 @@ BEGIN
                OR c.Name LIKE '%' + @Search + '%'
                OR s.Name LIKE '%' + @Search + '%')
         ORDER BY p.DisplayOrder, p.Name;
+    END
+    ELSE IF @Action = 'GET_EXPORT'
+    BEGIN
+        CREATE TABLE #ExportProducts (ProductId INT NOT NULL PRIMARY KEY);
+
+        INSERT INTO #ExportProducts (ProductId)
+        SELECT p.ProductId
+        FROM dbo.Products p
+        LEFT JOIN dbo.Categories c ON c.CategoryId = p.CategoryId
+        LEFT JOIN dbo.Subcategories s ON s.SubcategoryId = p.SubcategoryId
+        WHERE (@IncludeInactive = 1 OR p.IsActive = 1)
+          AND (@CategorySlug IS NULL OR c.Slug = @CategorySlug)
+          AND (@SubcategorySlug IS NULL OR s.Slug = @SubcategorySlug)
+          AND (@Search IS NULL OR p.Name LIKE '%' + @Search + '%'
+               OR p.ShortDescription LIKE '%' + @Search + '%'
+               OR p.CategoryLabel LIKE '%' + @Search + '%'
+               OR c.Name LIKE '%' + @Search + '%'
+               OR s.Name LIKE '%' + @Search + '%');
+
+        SELECT p.ProductId, p.Name,
+               c.Name AS CategoryName,
+               s.Name AS SubcategoryName,
+               p.DisplayOrder
+        FROM #ExportProducts ep
+        JOIN dbo.Products p ON p.ProductId = ep.ProductId
+        LEFT JOIN dbo.Categories c ON c.CategoryId = p.CategoryId
+        LEFT JOIN dbo.Subcategories s ON s.SubcategoryId = p.SubcategoryId
+        ORDER BY p.DisplayOrder, p.Name;
+
+        SELECT pf.ProductId, pf.FeatureText, pf.DisplayOrder
+        FROM dbo.ProductFeatures pf
+        JOIN #ExportProducts ep ON ep.ProductId = pf.ProductId
+        JOIN dbo.Products p ON p.ProductId = pf.ProductId
+        ORDER BY p.DisplayOrder, p.Name, pf.DisplayOrder, pf.FeatureId;
+
+        SELECT ps.ProductId, ps.SpecName, ps.SpecValue, ps.DisplayOrder
+        FROM dbo.ProductSpecs ps
+        JOIN #ExportProducts ep ON ep.ProductId = ps.ProductId
+        JOIN dbo.Products p ON p.ProductId = ps.ProductId
+        ORDER BY p.DisplayOrder, p.Name, ps.DisplayOrder, ps.SpecId;
+
+        SELECT pa.ProductId, pa.AppText, pa.DisplayOrder
+        FROM dbo.ProductApplications pa
+        JOIN #ExportProducts ep ON ep.ProductId = pa.ProductId
+        JOIN dbo.Products p ON p.ProductId = pa.ProductId
+        ORDER BY p.DisplayOrder, p.Name, pa.DisplayOrder, pa.AppId;
     END
     ELSE IF @Action = 'GET_BY_ID'
     BEGIN

@@ -3,6 +3,27 @@
 {% block content %}
 <div class="card">
   {{ listTop('All Categories', '/admin/categories/new', 'Add Category') }}
+  <form class="admin-filters admin-filters--compact" method="get" action="/admin/categories">
+    <div class="admin-filter__field admin-filter__field--search">
+      <label for="categoryFilterSearch">Category</label>
+      <input id="categoryFilterSearch" type="search" name="q" value="{{ search }}" placeholder="Search category name or slug...">
+    </div>
+    <div class="admin-filter__field">
+      <label for="categoryFilterStatus">Status</label>
+      <select id="categoryFilterStatus" name="status">
+        <option value="">All statuses</option>
+        <option value="active" {{ 'selected' if status == 'active' }}>Active</option>
+        <option value="hidden" {{ 'selected' if status == 'hidden' }}>Hidden</option>
+      </select>
+    </div>
+    <div class="admin-filter__actions">
+      <button class="btn btn-primary" type="submit">Apply filters</button>
+      {% if hasFilters %}<a class="btn btn-outline" href="/admin/categories">Clear</a>{% endif %}
+      <a class="btn btn-outline" href="/admin/categories/export{% if filterQuery %}?{{ filterQuery }}{% endif %}">Export Excel</a>
+    </div>
+  </form>
+  <div class="admin-filter__summary"><strong>{{ totalCategories }}</strong> matching categor{{ 'y' if totalCategories == 1 else 'ies' }}</div>
+
   {% if items.length %}
   <div class="table-wrap"><table class="data">
     <thead><tr><th>Image</th><th>Name</th><th>Slug</th><th>Subcategories</th><th>Products</th><th>Order</th><th>Status</th><th></th></tr></thead>
@@ -21,6 +42,7 @@
       {% endfor %}
     </tbody>
   </table></div>
+  {% elseif hasFilters %}<div class="empty">No categories match these filters. <a href="/admin/categories">Clear filters</a>.</div>
   {% else %}<div class="empty">No categories yet. <a href="/admin/categories/new">Add one</a>.</div>{% endif %}
 </div>
 {% endblock %}

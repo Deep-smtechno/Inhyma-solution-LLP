@@ -4,11 +4,127 @@
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
+const ExcelJS = require('exceljs');
 
 const { sql, query, queryOne, execProc } = require('../db');
 const { requireAuth } = require('../middleware/auth');
 const { uploader, webPath, removeByWebPath } = require('../utils/upload');
 const { makeSlug, asArray, toBit, toInt, nullIfEmpty, loadSettings, clearCache } = require('../utils/helpers');
+
+function normalizeStatusFilter(value) {
+  return ['active', 'hidden'].includes(value) ? value : '';
+}
+
+function matchesSearch(item, search, fields) {
+  if (!search) return true;
+  const searchLower = search.toLowerCase();
+  return fields.some((field) => String(item[field] || '').toLowerCase().includes(searchLower));
+}
+
+function matchesStatus(item, status) {
+  return !status
+    || (status === 'active' && Boolean(item.IsActive))
+    || (status === 'hidden' && !item.IsActive);
+}
+
+const LEAD_STATUSES = ['new', 'contacted', 'quoted', 'closed', 'lost'];
+
+function normalizeDateFilter(value) {
+  const date = nullIfEmpty(value) || '';
+  return /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : '';
+}
+
+function getLeadFilters(queryParams) {
+  return {
+    search: nullIfEmpty(queryParams.q) || '',
+    status: LEAD_STATUSES.includes(queryParams.status) ? queryParams.status : '',
+    source: nullIfEmpty(queryParams.source) || '',
+    dateFrom: normalizeDateFilter(queryParams.dateFrom),
+    dateTo: normalizeDateFilter(queryParams.dateTo),
+  };
+}
+
+function filterLeads(leads, filters) {
+  const fromTime = filters.dateFrom ? new Date(`${filters.dateFrom}T00:00:00`).getTime() : null;
+  const toTime = filters.dateTo ? new Date(`${filters.dateTo}T23:59:59.999`).getTime() : null;
+
+  return leads.filter((lead) => {
+    const createdTime = new Date(lead.CreatedAt).getTime();
+    return matchesSearch(lead, filters.search, [
+      'Name', 'Company', 'Mobile', 'Email', 'Industry', 'ProductRequirement', 'Subject', 'Message',
+    ])
+      && (!filters.status || lead.Status === filters.status)
+      && (!filters.source || lead.Source === filters.source)
+      && (fromTime === null || createdTime >= fromTime)
+      && (toTime === null || createdTime <= toTime);
+  });
+}
+
+function buildLeadFilterQuery(filters) {
+  const params = new URLSearchParams();
+  if (filters.search) params.set('q', filters.search);
+  if (filters.status) params.set('status', filters.status);
+  if (filters.source) params.set('source', filters.source);
+  if (filters.dateFrom) params.set('dateFrom', filters.dateFrom);
+  if (filters.dateTo) params.set('dateTo', filters.dateTo);
+  return params.toString();
+}
+
+function createExportWorkbook(sheetName, subject, columns) {
+  const workbook = new ExcelJS.Workbook();
+  workbook.creator = 'INHYMA Admin';
+  workbook.subject = subject;
+  workbook.created = new Date();
+  const worksheet = workbook.addWorksheet(sheetName, {
+    views: [{ state: 'frozen', ySplit: 1 }],
+    pageSetup: { orientation: 'landscape', fitToPage: true, fitToWidth: 1, fitToHeight: 0 },
+  });
+  worksheet.columns = columns;
+  return { workbook, worksheet };
+}
+
+function styleExportWorksheet(worksheet, lastColumn, wrapColumns = []) {
+  const headerRow = worksheet.getRow(1);
+  headerRow.height = 24;
+  headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+  headerRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF183B64' } };
+  headerRow.alignment = { vertical: 'middle', horizontal: 'left' };
+  worksheet.autoFilter = { from: 'A1', to: `${lastColumn}1` };
+  worksheet.properties.defaultRowHeight = 20;
+
+  worksheet.eachRow((row, rowNumber) => {
+    if (rowNumber <= 1) return;
+    row.alignment = { ...row.alignment, vertical: 'top' };
+    if (rowNumber % 2 === 1) {
+      row.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF5F8FC' } };
+    }
+  });
+
+  for (const column of wrapColumns) {
+    worksheet.getColumn(column).alignment = { vertical: 'top', wrapText: true };
+  }
+
+  const border = { style: 'thin', color: { argb: 'FFD7DEE8' } };
+  for (let rowNumber = 1; rowNumber <= worksheet.rowCount; rowNumber += 1) {
+    for (let columnNumber = 1; columnNumber <= worksheet.columnCount; columnNumber += 1) {
+      worksheet.getCell(rowNumber, columnNumber).border = {
+        top: border,
+        left: border,
+        bottom: border,
+        right: border,
+      };
+    }
+  }
+}
+
+async function sendExcelWorkbook(res, workbook, filenamePrefix) {
+  const buffer = await workbook.xlsx.writeBuffer();
+  const date = new Date().toISOString().slice(0, 10);
+  res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+  res.setHeader('Content-Disposition', `attachment; filename="${filenamePrefix}-${date}.xlsx"`);
+  res.setHeader('Cache-Control', 'no-store');
+  res.send(Buffer.from(buffer));
+}
 
 /* ============================================================
    AUTH
@@ -57,7 +173,66 @@ router.get('/', async (req, res, next) => {
    ============================================================ */
 router.get('/categories', async (req, res, next) => {
   try {
-    res.render('admin/categories/list', { title: 'Categories', items: await query('usp_Category_Manage', { Action: 'GET_ALL', IncludeInactive: 1 }) });
+    const search = nullIfEmpty(req.query.q) || '';
+    const status = normalizeStatusFilter(req.query.status);
+    const allItems = await query('usp_Category_Manage', { Action: 'GET_ALL', IncludeInactive: 1 });
+    const items = allItems.filter((category) => (
+      matchesSearch(category, search, ['Name', 'Slug', 'Description']) && matchesStatus(category, status)
+    ));
+    const filterParams = new URLSearchParams();
+    if (search) filterParams.set('q', search);
+    if (status) filterParams.set('status', status);
+
+    res.render('admin/categories/list', {
+      title: 'Categories',
+      items,
+      search,
+      status,
+      hasFilters: Boolean(search || status),
+      filterQuery: filterParams.toString(),
+      totalCategories: items.length,
+    });
+  } catch (err) { next(err); }
+});
+
+router.get('/categories/export', async (req, res, next) => {
+  try {
+    const search = nullIfEmpty(req.query.q) || '';
+    const status = normalizeStatusFilter(req.query.status);
+    const allItems = await query('usp_Category_Manage', { Action: 'GET_ALL', IncludeInactive: 1 });
+    const categories = allItems.filter((category) => (
+      matchesSearch(category, search, ['Name', 'Slug', 'Description']) && matchesStatus(category, status)
+    ));
+    const { workbook, worksheet } = createExportWorkbook('Categories', 'Product category export', [
+      { header: 'Category ID', key: 'categoryId', width: 13 },
+      { header: 'Name', key: 'name', width: 32 },
+      { header: 'Slug', key: 'slug', width: 30 },
+      { header: 'Description', key: 'description', width: 55 },
+      { header: 'Subcategories', key: 'subcategoryCount', width: 15 },
+      { header: 'Products', key: 'productCount', width: 12 },
+      { header: 'Display Order', key: 'displayOrder', width: 14 },
+      { header: 'Status', key: 'status', width: 12 },
+      { header: 'Show on Home', key: 'showOnHome', width: 14 },
+      { header: 'Image Path', key: 'imagePath', width: 48 },
+    ]);
+
+    for (const category of categories) {
+      worksheet.addRow({
+        categoryId: category.CategoryId,
+        name: category.Name || '',
+        slug: category.Slug || '',
+        description: category.Description || '',
+        subcategoryCount: category.SubcategoryCount || 0,
+        productCount: category.ProductCount || 0,
+        displayOrder: category.DisplayOrder,
+        status: category.IsActive ? 'Active' : 'Hidden',
+        showOnHome: category.ShowOnHome ? 'Yes' : 'No',
+        imagePath: category.ImagePath || '',
+      });
+    }
+
+    styleExportWorksheet(worksheet, 'J', ['description', 'imagePath']);
+    await sendExcelWorkbook(res, workbook, 'categories-export');
   } catch (err) { next(err); }
 });
 
@@ -110,10 +285,77 @@ router.post('/categories/:id/delete', async (req, res, next) => {
    ============================================================ */
 router.get('/subcategories', async (req, res, next) => {
   try {
+    const search = nullIfEmpty(req.query.q) || '';
+    const category = nullIfEmpty(req.query.category) || '';
+    const status = normalizeStatusFilter(req.query.status);
+    const [allItems, categories] = await Promise.all([
+      query('usp_Subcategory_Manage', { Action: 'GET_ALL', IncludeInactive: 1 }),
+      query('usp_Category_Manage', { Action: 'GET_ALL', IncludeInactive: 1 }),
+    ]);
+    const items = allItems.filter((subcategory) => {
+      const matchesCategory = !category || subcategory.CategorySlug === category;
+      return matchesSearch(subcategory, search, ['Name', 'Slug', 'CategoryName', 'Description'])
+        && matchesCategory
+        && matchesStatus(subcategory, status);
+    });
+    const filterParams = new URLSearchParams();
+    if (search) filterParams.set('q', search);
+    if (category) filterParams.set('category', category);
+    if (status) filterParams.set('status', status);
+
     res.render('admin/subcategories/list', {
       title: 'Subcategories',
-      items: await query('usp_Subcategory_Manage', { Action: 'GET_ALL', IncludeInactive: 1 }),
+      items,
+      categories,
+      search,
+      category,
+      status,
+      hasFilters: Boolean(search || category || status),
+      filterQuery: filterParams.toString(),
+      totalSubcategories: items.length,
     });
+  } catch (err) { next(err); }
+});
+
+router.get('/subcategories/export', async (req, res, next) => {
+  try {
+    const search = nullIfEmpty(req.query.q) || '';
+    const category = nullIfEmpty(req.query.category) || '';
+    const status = normalizeStatusFilter(req.query.status);
+    const allItems = await query('usp_Subcategory_Manage', { Action: 'GET_ALL', IncludeInactive: 1 });
+    const subcategories = allItems.filter((subcategory) => (
+      matchesSearch(subcategory, search, ['Name', 'Slug', 'CategoryName', 'Description'])
+      && (!category || subcategory.CategorySlug === category)
+      && matchesStatus(subcategory, status)
+    ));
+    const { workbook, worksheet } = createExportWorkbook('Subcategories', 'Product subcategory export', [
+      { header: 'Subcategory ID', key: 'subcategoryId', width: 16 },
+      { header: 'Name', key: 'name', width: 32 },
+      { header: 'Slug', key: 'slug', width: 30 },
+      { header: 'Category', key: 'category', width: 30 },
+      { header: 'Description', key: 'description', width: 55 },
+      { header: 'Products', key: 'productCount', width: 12 },
+      { header: 'Display Order', key: 'displayOrder', width: 14 },
+      { header: 'Status', key: 'status', width: 12 },
+      { header: 'Image Path', key: 'imagePath', width: 48 },
+    ]);
+
+    for (const subcategory of subcategories) {
+      worksheet.addRow({
+        subcategoryId: subcategory.SubcategoryId,
+        name: subcategory.Name || '',
+        slug: subcategory.Slug || '',
+        category: subcategory.CategoryName || '',
+        description: subcategory.Description || '',
+        productCount: subcategory.ProductCount || 0,
+        displayOrder: subcategory.DisplayOrder,
+        status: subcategory.IsActive ? 'Active' : 'Hidden',
+        imagePath: subcategory.ImagePath || '',
+      });
+    }
+
+    styleExportWorksheet(worksheet, 'I', ['description', 'imagePath']);
+    await sendExcelWorkbook(res, workbook, 'subcategories-export');
   } catch (err) { next(err); }
 });
 
@@ -180,21 +422,136 @@ router.get('/products', async (req, res, next) => {
   try {
     const page = parseInt(req.query.page, 10) || 1;
     const limit = 20;
+    const search = nullIfEmpty(req.query.q) || '';
+    const category = nullIfEmpty(req.query.category) || '';
+    const subcategory = nullIfEmpty(req.query.subcategory) || '';
 
-    const allProducts = await query('usp_Product_Manage', { Action: 'GET_ALL', IncludeInactive: 1 });
+    const [allProducts, categories, subcategories] = await Promise.all([
+      query('usp_Product_Manage', {
+        Action: 'GET_ALL',
+        Search: search || null,
+        CategorySlug: category || null,
+        SubcategorySlug: subcategory || null,
+        IncludeInactive: 1,
+      }),
+      query('usp_Category_Manage', { Action: 'GET_ALL', IncludeInactive: 1 }),
+      query('usp_Subcategory_Manage', { Action: 'GET_ALL', IncludeInactive: 1 }),
+    ]);
     const totalProducts = allProducts.length;
     const totalPages = Math.ceil(totalProducts / limit);
     const currentPage = Math.max(1, Math.min(page, totalPages || 1));
     const offset = (currentPage - 1) * limit;
     const items = allProducts.slice(offset, offset + limit);
+    const filterParams = new URLSearchParams();
+    if (search) filterParams.set('q', search);
+    if (category) filterParams.set('category', category);
+    if (subcategory) filterParams.set('subcategory', subcategory);
 
     res.render('admin/products/list', {
       title: 'Products',
       items,
+      categories,
+      subcategories,
+      search,
+      category,
+      subcategory,
+      hasFilters: Boolean(search || category || subcategory),
+      filterQuery: filterParams.toString(),
       currentPage,
       totalPages,
       totalProducts
     });
+  } catch (err) { next(err); }
+});
+
+router.get('/products/export', async (req, res, next) => {
+  try {
+    const search = nullIfEmpty(req.query.q) || '';
+    const category = nullIfEmpty(req.query.category) || '';
+    const subcategory = nullIfEmpty(req.query.subcategory) || '';
+    const result = await execProc('usp_Product_Manage', {
+      Action: 'GET_EXPORT',
+      Search: search || null,
+      CategorySlug: category || null,
+      SubcategorySlug: subcategory || null,
+      IncludeInactive: 1,
+    });
+    const products = result.recordsets[0] || [];
+    const featuresByProduct = new Map();
+    const specsByProduct = new Map();
+    const applicationsByProduct = new Map();
+
+    for (const feature of result.recordsets[1] || []) {
+      if (!featuresByProduct.has(feature.ProductId)) featuresByProduct.set(feature.ProductId, []);
+      featuresByProduct.get(feature.ProductId).push(feature.FeatureText);
+    }
+    for (const spec of result.recordsets[2] || []) {
+      if (!specsByProduct.has(spec.ProductId)) specsByProduct.set(spec.ProductId, []);
+      specsByProduct.get(spec.ProductId).push(spec);
+    }
+    for (const application of result.recordsets[3] || []) {
+      if (!applicationsByProduct.has(application.ProductId)) applicationsByProduct.set(application.ProductId, []);
+      applicationsByProduct.get(application.ProductId).push(application.AppText);
+    }
+
+    const { workbook, worksheet } = createExportWorkbook('Products', 'Product catalogue export', [
+      { header: 'Product ID', key: 'productId', width: 12 },
+      { header: 'Name', key: 'name', width: 38 },
+      { header: 'Category', key: 'category', width: 28 },
+      { header: 'Subcategory', key: 'subcategory', width: 28 },
+      { header: 'Feature Chips', key: 'features', width: 40 },
+      { header: 'Specification Name', key: 'specificationNames', width: 34 },
+      { header: 'Specification Value', key: 'specificationValues', width: 42 },
+      { header: 'Application Chips', key: 'applications', width: 40 },
+    ]);
+
+    const mergedProductGroups = [];
+    for (const product of products) {
+      const features = featuresByProduct.get(product.ProductId) || [];
+      const specs = specsByProduct.get(product.ProductId) || [];
+      const applications = applicationsByProduct.get(product.ProductId) || [];
+      const specificationRows = specs.length ? specs : [{ SpecName: '', SpecValue: '' }];
+      const startRow = worksheet.rowCount + 1;
+      const detailLines = Math.max(features.length, applications.length, specificationRows.length, 1);
+      const rowHeight = Math.min(
+        Math.max(24, Math.ceil((18 + (detailLines * 15)) / specificationRows.length)),
+        180,
+      );
+
+      specificationRows.forEach((spec, index) => {
+        const isFirstRow = index === 0;
+        const row = worksheet.addRow({
+          productId: isFirstRow ? product.ProductId : '',
+          name: isFirstRow ? product.Name || '' : '',
+          category: isFirstRow ? product.CategoryName || '' : '',
+          subcategory: isFirstRow ? product.SubcategoryName || '' : '',
+          features: isFirstRow ? features.join('\n') : '',
+          specificationNames: spec.SpecName || '',
+          specificationValues: spec.SpecValue || '',
+          applications: isFirstRow ? applications.join('\n') : '',
+        });
+        row.height = rowHeight;
+      });
+
+      const endRow = worksheet.rowCount;
+      if (endRow > startRow) {
+        for (const column of ['A', 'B', 'C', 'D', 'E', 'H']) {
+          worksheet.mergeCells(`${column}${startRow}:${column}${endRow}`);
+        }
+        mergedProductGroups.push({ startRow, endRow });
+      }
+    }
+
+    styleExportWorksheet(worksheet, 'H', ['features', 'specificationNames', 'specificationValues', 'applications']);
+    for (const { startRow } of mergedProductGroups) {
+      for (const column of ['A', 'B', 'C', 'D', 'E', 'H']) {
+        worksheet.getCell(`${column}${startRow}`).alignment = {
+          vertical: 'middle',
+          wrapText: ['B', 'C', 'D', 'E', 'H'].includes(column),
+        };
+      }
+    }
+    await sendExcelWorkbook(res, workbook, 'products-export');
   } catch (err) { next(err); }
 });
 
@@ -694,27 +1051,85 @@ router.post('/stats/:id/delete', async (req, res, next) => {
    ============================================================ */
 router.get('/leads', async (req, res, next) => {
   try {
-    const status = nullIfEmpty(req.query.status);
+    const filters = getLeadFilters(req.query);
     const page = parseInt(req.query.page, 10) || 1;
     const limit = 20;
 
-    const allLeads = await query('usp_Lead_Manage', { Action: 'GET_ALL', Status: status });
-    const totalLeads = allLeads.length;
+    const allLeads = await query('usp_Lead_Manage', { Action: 'GET_ALL', Status: null });
+    const filteredLeads = filterLeads(allLeads, filters);
+    const sources = [...new Set(allLeads.map((lead) => lead.Source).filter(Boolean))]
+      .sort((a, b) => a.localeCompare(b));
+    const totalLeads = filteredLeads.length;
     const totalPages = Math.ceil(totalLeads / limit);
     const currentPage = Math.max(1, Math.min(page, totalPages || 1));
     const offset = (currentPage - 1) * limit;
-    const items = allLeads.slice(offset, offset + limit);
+    const items = filteredLeads.slice(offset, offset + limit);
 
     res.render('admin/leads/list', {
       title: 'Leads',
       items,
-      status,
+      ...filters,
+      sources,
+      hasFilters: Object.values(filters).some(Boolean),
+      filterQuery: buildLeadFilterQuery(filters),
       currentPage,
       totalPages,
-      totalLeads
+      totalLeads,
+      allLeadCount: allLeads.length,
     });
   } catch (err) { next(err); }
 });
+
+router.get('/leads/export', async (req, res, next) => {
+  try {
+    const filters = getLeadFilters(req.query);
+    const allLeads = await query('usp_Lead_Manage', { Action: 'GET_ALL', Status: null });
+    const leads = filterLeads(allLeads, filters);
+    const { workbook, worksheet } = createExportWorkbook('CRM Leads', 'CRM leads export', [
+      { header: 'Lead ID', key: 'leadId', width: 11 },
+      { header: 'Name', key: 'name', width: 28 },
+      { header: 'Company', key: 'company', width: 30 },
+      { header: 'Mobile', key: 'mobile', width: 18 },
+      { header: 'Email', key: 'email', width: 32 },
+      { header: 'Industry', key: 'industry', width: 24 },
+      { header: 'Product Requirement', key: 'productRequirement', width: 38 },
+      { header: 'Quantity', key: 'quantity', width: 16 },
+      { header: 'Budget', key: 'budget', width: 18 },
+      { header: 'Subject', key: 'subject', width: 34 },
+      { header: 'Message', key: 'message', width: 55 },
+      { header: 'Source', key: 'source', width: 16 },
+      { header: 'Status', key: 'status', width: 14 },
+      { header: 'Next Reminder', key: 'nextReminderDate', width: 21 },
+      { header: 'Created At', key: 'createdAt', width: 21 },
+    ]);
+
+    for (const lead of leads) {
+      worksheet.addRow({
+        leadId: lead.LeadId,
+        name: lead.Name || '',
+        company: lead.Company || '',
+        mobile: lead.Mobile || '',
+        email: lead.Email || '',
+        industry: lead.Industry || '',
+        productRequirement: lead.ProductRequirement || '',
+        quantity: lead.Quantity || '',
+        budget: lead.Budget || '',
+        subject: lead.Subject || '',
+        message: lead.Message || '',
+        source: lead.Source || '',
+        status: lead.Status || '',
+        nextReminderDate: lead.NextReminderDate ? new Date(lead.NextReminderDate) : null,
+        createdAt: lead.CreatedAt ? new Date(lead.CreatedAt) : null,
+      });
+    }
+
+    styleExportWorksheet(worksheet, 'O', ['productRequirement', 'subject', 'message']);
+    worksheet.getColumn('nextReminderDate').numFmt = 'yyyy-mm-dd hh:mm';
+    worksheet.getColumn('createdAt').numFmt = 'yyyy-mm-dd hh:mm';
+    await sendExcelWorkbook(res, workbook, 'crm-leads-export');
+  } catch (err) { next(err); }
+});
+
 router.get('/leads/:id', async (req, res, next) => {
   try {
     const leadId = toInt(req.params.id);
