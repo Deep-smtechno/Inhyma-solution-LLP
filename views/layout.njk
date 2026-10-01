@@ -22,8 +22,17 @@
   <meta name="twitter:title" content="{{ title }}{% if title %} — {% endif %}{{ settings.company_name or 'INHYMA Solutions LLP' }}">
   <meta name="twitter:description" content="{{ metaDescription or 'INHYMA Solutions LLP — India\'s leading industrial packaging & automation solutions provider.' }}">
   <meta name="twitter:image" content="https://www.inhymasolutions.com/logo.png">
+
+  <!-- Header / Analytics Tracking Scripts (Google Tag, Google Analytics, etc.) -->
+  {% if settings.header_scripts %}
+    {{ settings.header_scripts | safe }}
+  {% endif %}
 </head>
 <body>
+  <!-- Body / Analytics Tracking Scripts (Google Tag Manager noscript, etc.) -->
+  {% if settings.body_scripts %}
+    {{ settings.body_scripts | safe }}
+  {% endif %}
 
   <!-- HEADER -->
   <header class="header" id="header">

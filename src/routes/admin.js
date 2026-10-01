@@ -1193,7 +1193,9 @@ router.post('/settings', async (req, res, next) => {
     const entries = Object.entries(req.body.settings || {});
     for (const [key, value] of entries) {
       let val = value || '';
-      if (key === 'address') {
+      if (['header_scripts', 'body_scripts'].includes(key)) {
+        val = val.slice(0, 15000);
+      } else if (key === 'address') {
         val = val.slice(0, 500);
       } else if (['footer_about', 'hero_subtitle'].includes(key)) {
         val = val.slice(0, 1000);

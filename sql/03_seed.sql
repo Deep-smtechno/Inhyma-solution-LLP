@@ -141,7 +141,9 @@ USING (VALUES
     ('social_twitter','#','social','Twitter / X URL'),
     ('hero_title','India''s Industrial Hyper Market','hero','Hero Title'),
     ('hero_subtitle','Innovative packaging machinery, material handling equipment, and automation systems that drive business growth.','hero','Hero Subtitle'),
-    ('footer_about','INHYMA Solutions LLP is India''s leading industrial hyper market providing innovative packaging machinery, material handling equipment, and automation systems to businesses across multiple industries.','footer','Footer About Text')
+    ('footer_about','INHYMA Solutions LLP is India''s leading industrial hyper market providing innovative packaging machinery, material handling equipment, and automation systems to businesses across multiple industries.','footer','Footer About Text'),
+    ('header_scripts','','analytics','Header Scripts (Google Tag, Analytics, Tracking Code)'),
+    ('body_scripts','','analytics','Body Scripts (e.g. Google Tag Manager noscript code)')
 ) AS s (SettingKey, SettingValue, SettingGroup, Label)
 ON t.SettingKey = s.SettingKey
 WHEN NOT MATCHED THEN
