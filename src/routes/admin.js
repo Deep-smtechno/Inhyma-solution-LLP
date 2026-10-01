@@ -1179,11 +1179,36 @@ router.post('/leads/:id/delete', async (req, res, next) => {
 /* ============================================================
    SITE SETTINGS
    ============================================================ */
+const SETTING_DEFAULTS = {
+  header_scripts: { group: 'analytics', label: 'Header Scripts (Google Tag, Analytics, Tracking Code)' },
+  body_scripts: { group: 'analytics', label: 'Body Scripts (e.g. Google Tag Manager noscript code)' }
+};
+
 router.get('/settings', async (req, res, next) => {
   try {
     const rows = await query('usp_Setting_Manage', { Action: 'GET_ALL' });
     const groups = {};
     for (const r of rows) { (groups[r.SettingGroup || 'general'] ||= []).push(r); }
+
+    // Fallback: Ensure tracking script fields appear even if database hasn't been seeded yet
+    groups['analytics'] ||= [];
+    if (!rows.some(r => r.SettingKey === 'header_scripts')) {
+      groups['analytics'].push({
+        SettingKey: 'header_scripts',
+        SettingValue: '',
+        SettingGroup: 'analytics',
+        Label: SETTING_DEFAULTS.header_scripts.label
+      });
+    }
+    if (!rows.some(r => r.SettingKey === 'body_scripts')) {
+      groups['analytics'].push({
+        SettingKey: 'body_scripts',
+        SettingValue: '',
+        SettingGroup: 'analytics',
+        Label: SETTING_DEFAULTS.body_scripts.label
+      });
+    }
+
     res.render('admin/settings', { title: 'Site Settings', groups });
   } catch (err) { next(err); }
 });
@@ -1202,7 +1227,14 @@ router.post('/settings', async (req, res, next) => {
       } else {
         val = val.slice(0, 200);
       }
-      await execProc('usp_Setting_Manage', { Action: 'UPSERT', SettingKey: key, SettingValue: { type: sql.NVarChar(sql.MAX), value: val } });
+      const def = SETTING_DEFAULTS[key];
+      await execProc('usp_Setting_Manage', {
+        Action: 'UPSERT',
+        SettingKey: key,
+        SettingValue: { type: sql.NVarChar(sql.MAX), value: val },
+        SettingGroup: def ? def.group : null,
+        Label: def ? def.label : null
+      });
     }
     clearCache();
     req.flash('success', 'Settings saved');
